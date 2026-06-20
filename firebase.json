@@ -1,0 +1,20 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "WORK_SUMMARY.md"
+    ]
+  },
+  "functions": [{
+    "source": "functions",
+    "runtime": "nodejs20",
+    "ignore": ["node_modules", ".git"]
+  }],
+  "database": {
+    "rules": "database.rules.json"
+  }
+}

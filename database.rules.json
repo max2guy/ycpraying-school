@@ -1,0 +1,38 @@
+{
+  "rules": {
+    "members": {
+      ".read": true,
+      ".write": true
+    },
+    "presence": {
+      ".read": true,
+      ".write": true
+    },
+    "messages": {
+      ".read": true,
+      ".write": true
+    },
+    "centerNode": {
+      ".read": true,
+      ".write": true
+    },
+    "fcmTokens": {
+      ".read": false,
+      ".write": true
+    },
+    "prayerEvents": {
+      ".read": false,
+      ".write": true
+    },
+    "appConfig": {
+      "requiredVersion": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "broadcastPush": {
+        ".read": false,
+        ".write": "auth != null"
+      }
+    },
+  }
+}
