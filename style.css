@@ -429,9 +429,9 @@ body.theme-s2 .amen-btn.active { background:rgba(231,76,60,0.18); color:#C0392B;
 .camp-link-btn:active { opacity:0.85; transform:scale(0.98); }
 
 /* ── LIGHTBOX ── */
-#lightbox { display:none; position:fixed; inset:0; background:rgba(80,20,50,0.90); z-index:3000; justify-content:center; align-items:center; }
+#lightbox { display:none; position:fixed; inset:0; background:rgba(80,20,50,0.90); z-index:3000; justify-content:center; align-items:center; overflow:hidden; touch-action:none; }
 #lightbox.active { display:flex; animation:fadeIn .2s; }
-#lightbox img { max-width:95%; max-height:90%; border-radius:var(--r-sm); }
+#lightbox img { max-width:95vw; max-height:90vh; border-radius:var(--r-sm); transform-origin:center center; will-change:transform; user-select:none; -webkit-user-drag:none; }
 
 /* ── ADMIN MODAL ── */
 #admin-modal { display:none; position:fixed; inset:0; background:rgba(120,50,90,0.60); z-index:3000; justify-content:center; align-items:center; }

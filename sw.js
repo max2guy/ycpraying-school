@@ -37,7 +37,7 @@ self.addEventListener('notificationclick', e => {
 });
 
 /* ===== 캐시 전략 ===== */
-const CACHE_NAME = 'yc-school-v2';
+const CACHE_NAME = 'yc-school-v3';
 
 const FILES_TO_CACHE = [
     './',

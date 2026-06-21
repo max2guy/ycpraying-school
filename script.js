@@ -1457,8 +1457,103 @@ function createFirework(x, y) {
     }
 }
 
-function openLightbox(src) { document.getElementById('lightbox-img').src=src; document.getElementById('lightbox').classList.add('active'); }
-function closeLightbox()    { document.getElementById('lightbox').classList.remove('active'); }
+// ── 라이트박스 (핀치 줌 + 패닝) ──
+(function() {
+    let scale = 1, tx = 0, ty = 0;
+    let lastDist = 0, lastMidX = 0, lastMidY = 0;
+    let panStartX = 0, panStartY = 0, panOriginTx = 0, panOriginTy = 0;
+    let isPinching = false, isPanning = false;
+    let tapTimer = null, tapCount = 0;
+
+    function applyTransform() {
+        const img = document.getElementById('lightbox-img');
+        img.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+    }
+
+    function resetTransform() {
+        scale = 1; tx = 0; ty = 0;
+        applyTransform();
+    }
+
+    function dist(t) { return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+    function mid(t)  { return { x:(t[0].clientX+t[1].clientX)/2, y:(t[0].clientY+t[1].clientY)/2 }; }
+
+    function clampTranslation() {
+        const img = document.getElementById('lightbox-img');
+        const rect = img.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const maxTx = Math.max(0, (rect.width  * scale - vw)  / 2);
+        const maxTy = Math.max(0, (rect.height * scale - vh) / 2);
+        tx = Math.max(-maxTx, Math.min(maxTx, tx));
+        ty = Math.max(-maxTy, Math.min(maxTy, ty));
+    }
+
+    const lb = document.getElementById('lightbox');
+
+    lb.addEventListener('touchstart', e => {
+        const t = e.touches;
+        if (t.length === 2) {
+            e.preventDefault();
+            isPinching = true; isPanning = false;
+            lastDist = dist(t);
+            const m = mid(t);
+            lastMidX = m.x; lastMidY = m.y;
+        } else if (t.length === 1) {
+            isPanning = scale > 1;
+            panStartX = t[0].clientX; panStartY = t[0].clientY;
+            panOriginTx = tx; panOriginTy = ty;
+            // 더블탭 감지
+            tapCount++;
+            clearTimeout(tapTimer);
+            tapTimer = setTimeout(() => { tapCount = 0; }, 300);
+            if (tapCount === 2) {
+                tapCount = 0;
+                if (scale > 1) { resetTransform(); }
+                else { scale = 2.5; applyTransform(); }
+            }
+        }
+    }, { passive: false });
+
+    lb.addEventListener('touchmove', e => {
+        const t = e.touches;
+        e.preventDefault();
+        if (t.length === 2 && isPinching) {
+            const newDist = dist(t);
+            const m = mid(t);
+            const ds = newDist / lastDist;
+            scale = Math.max(0.5, Math.min(6, scale * ds));
+            tx += (m.x - lastMidX);
+            ty += (m.y - lastMidY);
+            lastDist = newDist; lastMidX = m.x; lastMidY = m.y;
+            applyTransform();
+        } else if (t.length === 1 && isPanning) {
+            tx = panOriginTx + (t[0].clientX - panStartX);
+            ty = panOriginTy + (t[0].clientY - panStartY);
+            applyTransform();
+        }
+    }, { passive: false });
+
+    lb.addEventListener('touchend', e => {
+        if (e.touches.length < 2) isPinching = false;
+        if (e.touches.length === 0) {
+            if (scale < 1) { scale = 1; tx = 0; ty = 0; }
+            clampTranslation();
+            applyTransform();
+            isPanning = false;
+        }
+    });
+})();
+
+function openLightbox(src) {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    img.src = src;
+    img.style.transform = '';
+    lb.classList.add('active');
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+}
 
 // ── 게임 루프 (노드 위치 + 캔버스 파티클, 60fps 통합) ──
 let rafPaused = false;
