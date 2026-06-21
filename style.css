@@ -424,6 +424,9 @@ body.theme-s2 .amen-btn.active { background:rgba(231,76,60,0.18); color:#C0392B;
 .camp-img-container { margin-bottom:20px; padding:0 16px; }
 .camp-img-title { font-size:0.88rem; font-weight:800; color:var(--rose-dim); margin-bottom:10px; display:block; border-left:3px solid var(--rose); padding-left:10px; }
 .camp-image { width:100%; height:auto; display:block; border-radius:var(--r-md); cursor:pointer; box-shadow:var(--shadow-md); }
+.camp-link-container { padding:4px 16px 20px; }
+.camp-link-btn { display:block; text-align:center; padding:14px 20px; background:linear-gradient(135deg,#E07B54,#C0392B); color:#fff; text-decoration:none; border-radius:var(--r-md); font-size:0.95rem; font-weight:800; box-shadow:var(--shadow-md); letter-spacing:0.02em; }
+.camp-link-btn:active { opacity:0.85; transform:scale(0.98); }
 
 /* ── LIGHTBOX ── */
 #lightbox { display:none; position:fixed; inset:0; background:rgba(80,20,50,0.90); z-index:3000; justify-content:center; align-items:center; }
