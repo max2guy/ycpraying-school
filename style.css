@@ -206,11 +206,14 @@ button,.float-btn,.icon-btn,.amen-btn,.setting-item,.camera-btn,.enter-btn {
 }
 .top-ui-common:hover { border-color:var(--rose); background:var(--rose-soft); }
 .camp-btn    { top:28px; left:28px; }
-.mission-btn { top:138px; left:28px; animation:mission-pulse 3s ease-in-out infinite; }
-@media(max-width:768px) { .mission-btn { top:128px; left:18px; } }
+.mission-btn {
+  top:auto; bottom:104px; left:50%; transform:translateX(-50%);
+  animation:mission-pulse 3s ease-in-out infinite;
+}
+@media(max-width:768px) { .mission-btn { bottom:calc(92px + env(safe-area-inset-bottom)); } }
 @keyframes mission-pulse {
   0%,100% { box-shadow:var(--shadow-sm); }
-  50%      { box-shadow:0 0 0 6px rgba(255,133,176,0.28),var(--shadow-sm); }
+  50%      { box-shadow:0 0 0 6px rgba(255,133,176,0.28),var(--shadow-sm); transform:translateX(-50%); }
 }
 .online-counter { top:28px; right:28px; }
 .online-dot { width:8px; height:8px; background:var(--success); border-radius:50%; animation:blink 2s ease-in-out infinite; box-shadow:0 0 6px var(--success); }
@@ -678,6 +681,8 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-done-section { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px 0; }
 .mission-done-badge { font-size:0.95rem; font-weight:800; color:var(--rose); background:var(--rose-soft); border-radius:50px; padding:8px 20px; border:1.5px solid var(--rose-border); }
 .mission-done-photo { max-width:100%; max-height:220px; border-radius:var(--r-md); object-fit:contain; cursor:pointer; border:1.5px solid var(--rose-border); }
+.mission-edit-btn { background:none; border:1.5px solid var(--rose-border); color:var(--text-dim); font-size:0.82rem; font-weight:700; padding:8px 18px; border-radius:50px; cursor:pointer; transition:all .2s; }
+.mission-edit-btn:active { transform:scale(0.96); background:var(--rose-soft); }
 
 .mission-members-section { padding-bottom:4px; }
 .mission-members-title { font-size:0.80rem; font-weight:700; color:var(--text-dim); margin-bottom:10px; }

@@ -139,11 +139,19 @@ function getTodayKstDateStr() {
     return kst.toISOString().slice(0, 10);
 }
 function getTodayMission() {
-    return MISSION_SCHEDULE.find(m => m.date === getTodayKstDateStr()) || null;
+    // 테스트용: ?missionTest=1~7 → 오늘 날짜와 무관하게 해당 일차 미리보기
+    const testDay = Number(new URLSearchParams(location.search).get('missionTest'));
+    if (testDay >= 1 && testDay <= 7) return MISSION_SCHEDULE[testDay - 1];
+    const today = getTodayKstDateStr();
+    const exact = MISSION_SCHEDULE.find(m => m.date === today);
+    if (exact) return exact;
+    // 앱 정식 공개(7/20)와 무관하게 언제든 열람/인증 가능 — 기간 전에는 1일차, 기간 후에는 마지막 날 유지
+    if (today < MISSION_SCHEDULE[0].date) return MISSION_SCHEDULE[0];
+    return MISSION_SCHEDULE[MISSION_SCHEDULE.length - 1];
 }
 (function initMissionButton() {
     const btn = document.getElementById('mission-btn');
-    if (btn && getTodayMission()) btn.style.display = 'flex';
+    if (btn) btn.style.display = 'flex';
 })();
 
 
@@ -1038,24 +1046,24 @@ function openMissionPopup() {
     submitBtn.disabled = false;
     submitBtn.textContent = '✅ 인증 제출하기';
 
-    // 오늘 이미 완료했는지 확인
-    const today = getTodayKstDateStr();
-    missionsRef.child(today).child(mySessionId).once('value').then(snap => {
+    // 해당 일차 이미 완료했는지 확인 (실제 날짜가 아닌 미션 스케줄의 날짜를 키로 사용)
+    const missionRef = missionsRef.child(mission.date);
+    missionRef.child(mySessionId).once('value').then(snap => {
         if (snap.exists()) _showMissionCompleted(snap.val().photoData);
     });
 
-    // 오늘 전체 완료 현황 실시간 구독
-    const todayRef = missionsRef.child(today);
-    if (_missionPopupListener) todayRef.off('value', _missionPopupListener);
-    _missionPopupListener = todayRef.on('value', snap => _renderMissionMembers(snap.val() || {}));
+    // 해당 일차 전체 완료 현황 실시간 구독
+    if (_missionPopupListener) _missionPopupListener.ref.off('value', _missionPopupListener.cb);
+    const cb = snap => _renderMissionMembers(snap.val() || {});
+    missionRef.on('value', cb);
+    _missionPopupListener = { ref: missionRef, cb };
 
     document.getElementById('mission-popup').classList.add('active');
 }
 
 function closeMissionPopup() {
     document.getElementById('mission-popup').classList.remove('active');
-    const todayRef = missionsRef.child(getTodayKstDateStr());
-    if (_missionPopupListener) { todayRef.off('value', _missionPopupListener); _missionPopupListener = null; }
+    if (_missionPopupListener) { _missionPopupListener.ref.off('value', _missionPopupListener.cb); _missionPopupListener = null; }
 }
 
 function _showMissionCompleted(photoData) {
@@ -1095,18 +1103,37 @@ function submitMission() {
     btn.disabled = true; btn.textContent = '⏳ 제출 중...';
     const myMember = globalNodes.find(n => n.sessionId === mySessionId);
     const memberName = myMember ? myMember.name : '멤버';
-    missionsRef.child(getTodayKstDateStr()).child(mySessionId).set({
+    missionsRef.child(mission.date).child(mySessionId).set({
         photoData: _missionPhotoData,
         timestamp: Date.now(),
         day: mission.day,
         memberName: memberName
     }).then(() => {
         _showMissionCompleted(_missionPhotoData);
-        triggerHeartRain();
+        const rect = btn.getBoundingClientRect();
+        createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000);
     }).catch(err => {
         alert('제출 실패: ' + err.message);
         btn.disabled = false; btn.textContent = '✅ 인증 제출하기';
     });
+}
+
+function editMissionSubmission() {
+    if (!confirm('제출한 인증을 취소하고 사진을 다시 선택할까요?')) return;
+    const mission = getTodayMission();
+    if (!mission) return;
+    missionsRef.child(mission.date).child(mySessionId).remove().then(() => {
+        _missionPhotoData = null;
+        document.getElementById('mission-file-input').value = '';
+        document.getElementById('mission-upload-placeholder').style.display = 'flex';
+        document.getElementById('mission-photo-preview').style.display = 'none';
+        document.getElementById('mission-upload-section').style.display = 'block';
+        document.getElementById('mission-done-section').style.display = 'none';
+        const submitBtn = document.getElementById('mission-submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✅ 인증 제출하기';
+    }).catch(err => alert('삭제 실패: ' + err.message));
 }
 
 function _renderMissionMembers(completions) {
