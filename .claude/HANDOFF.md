@@ -1,10 +1,10 @@
-# ycpraying-school — Codex Handoff (v1.2.1)
+# ycpraying-school — Codex Handoff (v1.2.2)
 
 ## 현재 상태
 - 브랜치: `main`
-- 최신 커밋: `018f9dd` — feat: 수련회 사전 일일미션 기능 추가 (필사+암송 인증) (v1.1.0)
-- **현재 워킹트리에 커밋되지 않은 변경사항 있음** (아래 "방금 수정한 내용" 참고) — `index.html`, `script.js`, `style.css`, `sw.js`
-- Firebase Hosting 배포 완료 ✅ (커밋되지 않은 변경사항도 이미 `firebase deploy`로 배포됨 — 배포된 `script.js?v=98`이 로컬 소스와 일치함을 확인함)
+- 최신 커밋: `5657f09` — feat: 일일미션 버튼 하단 중앙 이동, 사전 오픈 허용, 편집/삭제 및 전용 완료 효과 추가 (v1.2.1)
+- **현재 워킹트리에 커밋되지 않은 변경사항 있음** (아래 "5." 참고) — `index.html`, `script.js`, `style.css`, `sw.js` (관리자 전용 미션 인증사진 삭제 기능)
+- Firebase Hosting 배포 완료 ✅ (`script.js?v=99` 배포 및 검증됨)
 - Cloud Functions 미배포 (Blaze 플랜 필요)
 
 ## 방금 수정한 내용 (이번 세션)
@@ -34,9 +34,18 @@
 - **해결**: `script.js`의 `submitMission()` 성공 콜백에서 `triggerHeartRain()` 제거 → 기존에 "아멘" 리액션(`toggleAmen`, 1403행)에서 쓰던 **1회성 불꽃 파티클** `createFirework(x, y)`를 제출 버튼 위치에서 발동 + `showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000)`로 교체. 전역 상태를 건드리지 않는 개인 전용 축하 효과.
 - 브라우저에서 실제 제출 테스트로 검증 완료: 토스트 문구 정상 표시, centerNode 변경 없음, RTDB에도 정상 기록됨을 확인
 
+### 5. 관리자 전용 미션 인증사진 삭제 기능 추가
+- **사용자 요청**: "지금 올라가있는 인증 사진을 삭제 할 수 있어야 함, 관리자 모드에서만 가능하게 하자"
+- 기존 `deleteMember()`의 `isAdmin` 게이팅 패턴(alert → confirm → RTDB `.remove()`)을 그대로 재사용
+- `script.js`의 `_renderMissionMembers(completions)` 내부, 각 멤버 칩에 `isAdmin`일 때만 `×` 삭제 버튼(`.mission-member-delete-btn`)을 렌더링. 버튼 클릭 시 `event.stopPropagation()`으로 칩 자체의 사진 라이트박스 열기(`_openMissionMemberPhoto`)와 충돌 방지
+- 신규 함수 `adminDeleteMissionSubmission(uid)`: `isAdmin` 체크 → `confirm()` → `missionsRef.child(mission.date).child(uid).remove()`
+- `style.css`에 `.mission-member-delete-btn` 스타일 추가 (기존 `.admin-delete-btn-icon` 색상 규칙 참고)
+- **브라우저 실제 검증 완료**: (1) `isAdmin=false`일 때 삭제 버튼이 보이지 않음을 스크린샷으로 확인, (2) `isAdmin=true`로 전환 후 버튼이 정상 표시됨을 확인, (3) 버튼 클릭 → `confirm()` 승인 → 실제로 해당 `uid`의 RTDB 노드가 삭제됨까지 실제로 확인됨(승인 경로 e2e 검증 완료)
+- ⚠️ 이 검증 과정에서 사용자가 이전에 "삭제하지 않음"을 선택해 보존하기로 했던 테스트 데이터(`missions/2026-07-20/user_1783863291040`)가 실수로 삭제됨. 사용자에게 즉시 보고했고, 사용자는 "복구하지 않고 그대로 둠"을 선택함 — 테스트 데이터였으므로 실사용에 영향 없음
+
 ### 캐시 버전
-- `index.html`: `style.css?v=77`, `script.js?v=98`
-- `sw.js`: `CACHE_NAME='yc-school-v8'`, 버전 주석 `98 (v1.2.1)`
+- `index.html`: `style.css?v=78`, `script.js?v=99`
+- `sw.js`: `CACHE_NAME='yc-school-v9'`, 버전 주석 `99 (v1.2.2)`
 
 ## 이번 세션에서 있었던 이슈 (버그 아님, 참고용)
 - 브라우저로 제출 테스트 중 `missions/2026-07-12`에 낡은 테스트 데이터(사용자가 직접 올린 구역/구역장 표 사진)가 남아있고, `missions/2026-07-20`은 비어있는 것처럼 보여 혼란이 있었음
@@ -61,9 +70,10 @@
 | `functions/index.js` | S1용 Cloud Functions 4개 (미배포) |
 
 ## 다음으로 할 수 있는 작업
-1. 워킹트리의 커밋되지 않은 변경사항(`index.html`, `script.js`, `style.css`, `sw.js`) 커밋 여부 확인 — 사용자 승인 필요
-2. 정식 오픈(2026-07-20) 전에 `missions/2026-07-12` (구버전 테스트) 및 `missions/2026-07-20`의 초록색 테스트 이미지 정리 여부 결정
+1. 워킹트리의 커밋되지 않은 변경사항(관리자 전용 미션 사진 삭제 기능, `index.html`, `script.js`, `style.css`, `sw.js`) 커밋 여부 확인 — 사용자 승인 필요
+2. 정식 오픈(2026-07-20) 전에 `missions/2026-07-12`(구버전 테스트, `user_1783863291040`)의 낡은 테스트 데이터 정리 여부 결정 — 사용자가 이전에 "삭제하지 않음"을 선택함, 재차 확인 필요
 3. `editMissionSubmission()`의 실제 삭제(확인) 경로는 자동화 브라우저의 네이티브 `confirm()` 다이얼로그 제약으로 완전한 e2e 테스트는 못했음 (취소 경로는 검증 완료) — 코드 리뷰 수준으로만 검증됨
+4. `adminDeleteMissionSubmission()`은 승인/취소 경로 모두 브라우저 e2e 검증 완료
 
 ## 빌드 & 배포
 ```bash

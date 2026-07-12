@@ -1150,10 +1150,19 @@ function _renderMissionMembers(completions) {
         .map(([uid, data]) => {
             const name = escHtml(data.memberName || '멤버');
             const clickable = data.photoData ? `onclick="_openMissionMemberPhoto('${uid}')" style="cursor:pointer"` : '';
+            const deleteBtn = isAdmin ? `<button class="mission-member-delete-btn" onclick="event.stopPropagation(); adminDeleteMissionSubmission('${uid}')" aria-label="인증 사진 삭제">×</button>` : '';
             return `<div class="mission-member-chip" ${clickable}>
-                <span>✅</span><span class="mission-member-name">${name}</span>
+                <span>✅</span><span class="mission-member-name">${name}</span>${deleteBtn}
             </div>`;
         }).join('');
+}
+
+function adminDeleteMissionSubmission(uid) {
+    if (!isAdmin) { alert('인증 사진 삭제는 관리자만 가능합니다.'); return; }
+    if (!confirm('이 인증 사진을 삭제하시겠습니까?')) return;
+    const mission = getTodayMission();
+    if (!mission) return;
+    missionsRef.child(mission.date).child(uid).remove().catch(err => alert('삭제 실패: ' + err.message));
 }
 
 function _openMissionMemberPhoto(uid) {
