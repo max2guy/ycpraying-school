@@ -121,6 +121,30 @@ let centerNodeRef = database.ref('centerNode');
 const onlineRef   = database.ref('.info/connected');   // .info/connected는 고정 경로
 let presenceRef   = database.ref('presence');
 let messagesRef   = database.ref('messages');
+const missionsRef = database.ref('missions');
+
+// ── 일일미션 스케줄 (수련회 사전 프로그램 7/20-7/26) ──
+const MISSION_SCHEDULE = [
+    { date:'2026-07-20', day:1, label:'1일차', range:'사도행전 2:14-19', desc:'6절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-21', day:2, label:'2일차', range:'사도행전 2:20-25', desc:'6절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-22', day:3, label:'3일차', range:'사도행전 2:26-31', desc:'6절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-23', day:4, label:'4일차', range:'사도행전 2:32-37', desc:'6절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-24', day:5, label:'5일차', range:'사도행전 2:38-42', desc:'5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-25', day:6, label:'6일차', range:'사도행전 2:14-42 전체', desc:'지난 5일 동안 필사한 전체 구절을 나란히 펼쳐 마무리 인증 사진을 찍어요! 🙏' },
+    { date:'2026-07-26', day:7, label:'주일',  range:'사도행전 2:17 암송', desc:'"하나님이 말씀하시기를 말세에 내가 내 영을 모든 육체에 부어 주리니" — 암송 후 사진이나 영상으로 인증하세요! 🌟' },
+];
+
+function getTodayKstDateStr() {
+    const kst = new Date(Date.now() + 9 * 3600 * 1000);
+    return kst.toISOString().slice(0, 10);
+}
+function getTodayMission() {
+    return MISSION_SCHEDULE.find(m => m.date === getTodayKstDateStr()) || null;
+}
+(function initMissionButton() {
+    const btn = document.getElementById('mission-btn');
+    if (btn && getTodayMission()) btn.style.display = 'flex';
+})();
 
 
 let mySessionId = localStorage.getItem('mySessionId');
@@ -986,6 +1010,129 @@ window.addEventListener("resize", () => {
 
 // ── UI FUNCTIONS ──
 function toggleCampPopup()  { document.getElementById('camp-popup').classList.toggle('active'); }
+
+// ── 일일미션 팝업 ──
+let _missionPhotoData = null;
+let _missionPopupListener = null;
+let _missionCompletionsCache = {};
+
+function openMissionPopup() {
+    const mission = getTodayMission();
+    if (!mission) return;
+
+    // 진행 상황 업데이트
+    document.getElementById('mission-day-badge').textContent = mission.label;
+    document.getElementById('mission-progress-label').textContent = `7일 중 ${mission.day}일차`;
+    document.getElementById('mission-progress-fill').style.width = `${(mission.day / 7) * 100}%`;
+    document.getElementById('mission-scripture-range').textContent = mission.range;
+    document.getElementById('mission-scripture-desc').textContent = mission.desc;
+
+    // 업로드 상태 초기화
+    _missionPhotoData = null;
+    document.getElementById('mission-file-input').value = '';
+    document.getElementById('mission-upload-placeholder').style.display = 'flex';
+    document.getElementById('mission-photo-preview').style.display = 'none';
+    document.getElementById('mission-upload-section').style.display = 'block';
+    document.getElementById('mission-done-section').style.display = 'none';
+    const submitBtn = document.getElementById('mission-submit-btn');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '✅ 인증 제출하기';
+
+    // 오늘 이미 완료했는지 확인
+    const today = getTodayKstDateStr();
+    missionsRef.child(today).child(mySessionId).once('value').then(snap => {
+        if (snap.exists()) _showMissionCompleted(snap.val().photoData);
+    });
+
+    // 오늘 전체 완료 현황 실시간 구독
+    const todayRef = missionsRef.child(today);
+    if (_missionPopupListener) todayRef.off('value', _missionPopupListener);
+    _missionPopupListener = todayRef.on('value', snap => _renderMissionMembers(snap.val() || {}));
+
+    document.getElementById('mission-popup').classList.add('active');
+}
+
+function closeMissionPopup() {
+    document.getElementById('mission-popup').classList.remove('active');
+    const todayRef = missionsRef.child(getTodayKstDateStr());
+    if (_missionPopupListener) { todayRef.off('value', _missionPopupListener); _missionPopupListener = null; }
+}
+
+function _showMissionCompleted(photoData) {
+    document.getElementById('mission-upload-section').style.display = 'none';
+    document.getElementById('mission-done-section').style.display = 'flex';
+    if (photoData) document.getElementById('mission-done-img').src = photoData;
+}
+
+function handleMissionPhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX = 1080;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) { const r = Math.min(MAX/w, MAX/h); w = Math.round(w*r); h = Math.round(h*r); }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            _missionPhotoData = canvas.toDataURL('image/jpeg', 0.70);
+            document.getElementById('mission-preview-img').src = _missionPhotoData;
+            document.getElementById('mission-upload-placeholder').style.display = 'none';
+            document.getElementById('mission-photo-preview').style.display = 'flex';
+        };
+        img.src = e.target.result;
+    };
+}
+
+function submitMission() {
+    if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
+    const mission = getTodayMission();
+    if (!mission) return;
+    const btn = document.getElementById('mission-submit-btn');
+    btn.disabled = true; btn.textContent = '⏳ 제출 중...';
+    const myMember = globalNodes.find(n => n.sessionId === mySessionId);
+    const memberName = myMember ? myMember.name : '멤버';
+    missionsRef.child(getTodayKstDateStr()).child(mySessionId).set({
+        photoData: _missionPhotoData,
+        timestamp: Date.now(),
+        day: mission.day,
+        memberName: memberName
+    }).then(() => {
+        _showMissionCompleted(_missionPhotoData);
+        triggerHeartRain();
+    }).catch(err => {
+        alert('제출 실패: ' + err.message);
+        btn.disabled = false; btn.textContent = '✅ 인증 제출하기';
+    });
+}
+
+function _renderMissionMembers(completions) {
+    _missionCompletionsCache = completions;
+    const grid = document.getElementById('mission-members-grid');
+    if (!grid) return;
+    const entries = Object.entries(completions);
+    if (entries.length === 0) {
+        grid.innerHTML = '<div class="mission-no-members">아직 완료한 멤버가 없어요 🙏<br>첫 번째 주인공이 되어보세요!</div>';
+        return;
+    }
+    grid.innerHTML = entries
+        .sort((a, b) => (a[1].timestamp||0) - (b[1].timestamp||0))
+        .map(([uid, data]) => {
+            const name = escHtml(data.memberName || '멤버');
+            const clickable = data.photoData ? `onclick="_openMissionMemberPhoto('${uid}')" style="cursor:pointer"` : '';
+            return `<div class="mission-member-chip" ${clickable}>
+                <span>✅</span><span class="mission-member-name">${name}</span>
+            </div>`;
+        }).join('');
+}
+
+function _openMissionMemberPhoto(uid) {
+    const data = _missionCompletionsCache[uid];
+    if (data && data.photoData) openLightbox(data.photoData);
+}
 function toggleChatPopup() {
     const el = document.getElementById('chat-popup');
     el.classList.toggle('active');

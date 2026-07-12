@@ -24,6 +24,14 @@
       ".read": false,
       ".write": true
     },
+    "missions": {
+      ".read": true,
+      "$date": {
+        "$sessionId": {
+          ".write": true
+        }
+      }
+    },
     "appConfig": {
       "requiredVersion": {
         ".read": true,
