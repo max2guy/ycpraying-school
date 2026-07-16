@@ -1160,23 +1160,37 @@ function editMissionSubmission() {
 
 function _renderMissionMembers(completions) {
     _missionCompletionsCache = completions;
+    _updateGiftBanner(completions._firstPlace);
     const grid = document.getElementById('mission-members-grid');
     if (!grid) return;
-    const entries = Object.entries(completions);
+    const entries = Object.entries(completions).filter(([uid]) => uid !== '_firstPlace');
     if (entries.length === 0) {
         grid.innerHTML = '<div class="mission-no-members">아직 완료한 멤버가 없어요 🙏<br>첫 번째 주인공이 되어보세요!</div>';
         return;
     }
+    const winnerUid = completions._firstPlace && completions._firstPlace.sessionId;
     grid.innerHTML = entries
         .sort((a, b) => (a[1].timestamp||0) - (b[1].timestamp||0))
         .map(([uid, data]) => {
             const name = escHtml(data.memberName || '멤버');
             const clickable = data.photoData ? `onclick="_openMissionMemberPhoto('${uid}')" style="cursor:pointer"` : '';
             const deleteBtn = isAdmin ? `<button class="mission-member-delete-btn" onclick="event.stopPropagation(); adminDeleteMissionSubmission('${uid}')" aria-label="인증 사진 삭제">×</button>` : '';
+            const giftBadge = uid === winnerUid ? '<span class="mission-gift-badge">🎁</span>' : '';
             return `<div class="mission-member-chip" ${clickable}>
-                <span>✅</span><span class="mission-member-name">${name}</span>${deleteBtn}
+                <span>✅</span><span class="mission-member-name">${name}</span>${giftBadge}${deleteBtn}
             </div>`;
         }).join('');
+}
+
+function _updateGiftBanner(firstPlace) {
+    const banner = document.getElementById('mission-gift-banner');
+    if (!banner) return;
+    if (firstPlace && firstPlace.memberName) {
+        document.getElementById('mission-gift-winner').textContent = firstPlace.memberName;
+        banner.style.display = 'flex';
+    } else {
+        banner.style.display = 'none';
+    }
 }
 
 function adminDeleteMissionSubmission(uid) {
@@ -1189,7 +1203,7 @@ function adminDeleteMissionSubmission(uid) {
 
 function _openMissionMemberPhoto(uid) {
     const data = _missionCompletionsCache[uid];
-    if (data && data.photoData) openLightbox(data.photoData);
+    if (data && data.photoData) openLightbox(data.photoData, data.prayerText);
 }
 function toggleChatPopup() {
     const el = document.getElementById('chat-popup');
