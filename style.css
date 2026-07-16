@@ -698,3 +698,13 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-no-members { width:100%; text-align:center; padding:20px 16px; color:var(--text-dim); font-size:0.83rem; line-height:1.7; }
 .mission-gift-banner { display:flex; align-items:center; justify-content:center; gap:6px; background:linear-gradient(135deg,#FFD86B,#FFB74D); color:#7A4A00; font-size:0.82rem; font-weight:800; padding:10px 14px; border-radius:var(--r-md); text-align:center; }
 .mission-gift-badge { font-size:0.85rem; margin-left:2px; }
+
+/* ── 시크릿기프트 당첨 축하 팝업 ── */
+#mission-winner-popup { display:none; position:fixed; inset:0; background:rgba(120,50,90,0.65); z-index:4000; justify-content:center; align-items:center; }
+#mission-winner-popup.active { display:flex; animation:fadeIn .2s; }
+.winner-popup-box { background:var(--bg); border:2px solid #FFB74D; width:290px; padding:30px 24px; border-radius:var(--r-lg); text-align:center; box-shadow:var(--shadow-lg); }
+.winner-popup-emoji { font-size:2.2rem; margin-bottom:10px; }
+.winner-popup-box h3 { margin:0 0 10px; color:#7A4A00; font-size:1.15rem; font-weight:800; }
+.winner-popup-box p { margin:0 0 8px; font-size:0.92rem; color:var(--text); line-height:1.6; }
+.winner-popup-note { font-size:0.82rem !important; color:var(--text-dim) !important; }
+.winner-popup-box .submit-btn { margin-top:14px; }

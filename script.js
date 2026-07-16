@@ -1121,6 +1121,7 @@ function handleMissionPhotoSelect(event) {
 }
 
 function submitMission() {
+    if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증은 오전 7시부터 자정까지만 제출할 수 있어요.'); return; }
     if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
     const memberName = document.getElementById('mission-name-input').value.trim();
     if (!memberName) { alert('✍️ 이름을 입력해주세요!'); return; }
@@ -1141,17 +1142,56 @@ function submitMission() {
     }).then(() => {
         _missionSubmittedPrayerText = prayerText;
         _showMissionCompleted(_missionPhotoData, prayerText);
-        const rect = btn.getBoundingClientRect();
-        createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000);
+        const showPlainCelebration = () => {
+            const rect = btn.getBoundingClientRect();
+            createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000);
+        };
         missionDateRef.child('_firstPlace').transaction(current => {
             if (current === null) return { sessionId: mySessionId, memberName: memberName, timestamp: Date.now() };
             return undefined;
-        }).catch(() => {});
+        }).then(result => {
+            const iWonFirstPlace = result.committed && result.snapshot.val() && result.snapshot.val().sessionId === mySessionId;
+            if (iWonFirstPlace) {
+                _showWinnerCelebration('오늘의 시크릿기프트 1등 당첨! 🎁');
+            } else {
+                showPlainCelebration();
+                _attemptRandomWinnerDraw(mission.date, memberName);
+            }
+        }).catch(() => { showPlainCelebration(); });
     }).catch(err => {
         alert('제출 실패: ' + err.message);
         btn.disabled = false; btn.textContent = '✅ 인증 제출하기';
     });
+}
+
+function _attemptRandomWinnerDraw(date, memberName) {
+    const missionDateRef = missionsRef.child(date);
+    const prevDate = _getPrevKstDateStr(date);
+    missionsRef.child(prevDate).child('_randomWinner').once('value').then(snap => {
+        const prevWinnerName = snap.exists() ? snap.val().memberName : null;
+        if (prevWinnerName && prevWinnerName === memberName) return; // 연속 2일 당첨 방지
+        missionDateRef.child('_randomWinner').transaction(current => {
+            const count = (current && current.count) || 0;
+            const newCount = count + 1;
+            if (Math.random() < 1 / newCount) {
+                return { sessionId: mySessionId, memberName: memberName, timestamp: Date.now(), count: newCount };
+            }
+            return { ...current, count: newCount };
+        }).catch(() => {});
+    }).catch(() => {});
+}
+
+function _showWinnerCelebration(message) {
+    document.getElementById('winner-popup-message').textContent = message;
+    const cw = window.innerWidth, ch = window.innerHeight;
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => createFirework(Math.random() * cw, ch * 0.3 + Math.random() * ch * 0.4), i * 220);
+    }
+    document.getElementById('mission-winner-popup').classList.add('active');
+}
+function closeMissionWinnerPopup() {
+    document.getElementById('mission-winner-popup').classList.remove('active');
 }
 
 function editMissionSubmission() {
@@ -1179,7 +1219,7 @@ function _renderMissionMembers(completions) {
     _updateGiftBanner(completions._firstPlace);
     const grid = document.getElementById('mission-members-grid');
     if (!grid) return;
-    const entries = Object.entries(completions).filter(([uid]) => uid !== '_firstPlace');
+    const entries = Object.entries(completions).filter(([uid]) => uid !== '_firstPlace' && uid !== '_randomWinner');
     if (entries.length === 0) {
         grid.innerHTML = '<div class="mission-no-members">아직 완료한 멤버가 없어요 🙏<br>첫 번째 주인공이 되어보세요!</div>';
         return;

@@ -200,6 +200,17 @@
         </div>
     </div>
 
+    <!-- 시크릿기프트 당첨 축하 팝업 -->
+    <div id="mission-winner-popup" onclick="closeMissionWinnerPopup()">
+        <div class="winner-popup-box" onclick="event.stopPropagation()">
+            <div class="winner-popup-emoji">🎉🎁🎉</div>
+            <h3>축하합니다!</h3>
+            <p id="winner-popup-message">오늘의 시크릿기프트 당첨!</p>
+            <p class="winner-popup-note">선물은 카카오톡으로 전달됩니다 💬</p>
+            <button class="submit-btn" onclick="closeMissionWinnerPopup()">확인</button>
+        </div>
+    </div>
+
     <!-- 채팅 팝업 (Bottom Sheet) -->
     <div id="chat-popup" class="popup-overlay" onclick="toggleChatPopup()">
         <div class="popup-content" onclick="event.stopPropagation()">
