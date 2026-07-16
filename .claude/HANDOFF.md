@@ -1,13 +1,43 @@
-# ycpraying-school — Codex Handoff (v1.3.0)
+# ycpraying-school — Codex Handoff (v1.3.0 + 미션 스케줄 조정)
 
 ## 현재 상태
 - 브랜치: `main`
-- 최신 커밋: `e7b796f` — `chore: 캐시 버전 v1.3.0으로 갱신`
+- 최신 커밋: `e3d0ce1` — `feat: 사도행전 2장 전체 필사 배분 및 암송일 인증 UI 제거`
 - 워킹트리 클린 (모두 커밋됨). `.claude/launch.json`만 untracked (로컬 dev 서버 설정, 커밋 대상 아님)
 - Firebase Hosting 배포 완료 (`https://ycpraying-school.web.app`, 2026-07-16)
-- 로컬 main이 origin/main보다 앞서 있음 — **push 여부는 아직 사용자에게 확인받지 못함**
+- origin/main에 push 완료 (v1.3.0 커밋들 + 이번 미션 스케줄 조정 커밋들 모두 반영)
 
-## 방금 수정한 내용 (이번 세션 — v1.3.0)
+## 방금 수정한 내용 (이번 세션 — 미션 스케줄 조정, v1.3.0 이후 후속 작업)
+
+일일미션 `MISSION_SCHEDULE`을 사용자 피드백에 따라 3차례 조정했다 (커밋 순서대로):
+
+1. **`5f95dc2`** — 토요일도 필사일이 되도록 2:14-42(29절)를 5/5/5/5/5/4로 6일 재배분 (기존엔 토요일이 "5일치 복습" 특수일이었음)
+2. **`e80fb6f`** — 주일(7일차) 암송 구절 `desc`를 사도행전 2:17 전체 문장으로 확장 (기존엔 앞 구절만 표시)
+3. **`e3d0ce1`** — 사용자가 "14~42절은 분량이 너무 적다"고 판단 → 사도행전 2장 전체(1~47절, 총 47절)를 6일로 재배분: 8/8/8/8/8/7절. 그리고 7일차(주일) 암송일에서 **인증/제출 UI를 완전히 제거**(`noSubmit:true` 플래그 신설)
+
+### `noSubmit` 플래그 동작 (`script.js` `openMissionPopup()` ~line 1042)
+- `mission.noSubmit === true`이면: 선물배너, 시간제한안내, 업로드섹션, 완료섹션, 멤버섹션을 모두 `display:none` 처리하고 Firebase `missionRef.on('value', ...)` 리스너를 아예 붙이지 않고 즉시 return
+- 구절 라벨(`#mission-scripture-label`)도 `noSubmit` 여부에 따라 "오늘의 필사 구절" ↔ "오늘의 암송 구절"로 동적 전환
+- `index.html`에 `#mission-scripture-label`, `#mission-members-section` id를 새로 추가해서 JS가 이 두 요소를 제어할 수 있게 함
+- 검증: `?missionTest=1~7` 쿼리로 각 요일 팝업을 브라우저에서 직접 열어 스크린샷 확인 완료 (7일차: 인증 UI 전혀 없음, 3일차/6일차: 정상 제출 UI 유지, 콘솔 에러 없음)
+
+### 최종 `MISSION_SCHEDULE` (2026-07-20 ~ 2026-07-26)
+| 일차 | 날짜 | 범위 | 절수 | 비고 |
+|---|---|---|---|---|
+| 1일차 | 07-20 | 2:1-8 | 8절 | 필사+인증 |
+| 2일차 | 07-21 | 2:9-16 | 8절 | 필사+인증 |
+| 3일차 | 07-22 | 2:17-24 | 8절 | 필사+인증 |
+| 4일차 | 07-23 | 2:25-32 | 8절 | 필사+인증 |
+| 5일차 | 07-24 | 2:33-40 | 8절 | 필사+인증 |
+| 6일차 | 07-25 | 2:41-47 | 7절 | 필사+인증 |
+| 주일(7일차) | 07-26 | 2:17 암송 | - | **암송만, 인증 UI 없음** (`noSubmit:true`) |
+
+### 캐시 버전 — 갱신 안 함
+콘텐츠/조건분기 변경일 뿐이고 Service Worker는 동일 출처 리소스에 Network-First 전략을 쓰므로, 이번 3개 커밋 모두 `CACHE_NAME`/`?v=` 버전 갱신을 하지 않았다 (기존 `v=103`/`yc-school-v13` 그대로 유지).
+
+---
+
+## 이전 세션 작업 (v1.3.0)
 
 일일미션에 **제출 가능 시간대 제한** + **듀얼 당첨자(1등 + 랜덤)** + **당첨 축하 강화** + **관리자용 당첨자 목록**을 추가했다. 관련 계획 문서: [docs/superpowers/plans/2026-07-16-mission-time-window-dual-winners.md](../docs/superpowers/plans/2026-07-16-mission-time-window-dual-winners.md)
 
