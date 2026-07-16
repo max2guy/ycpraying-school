@@ -1855,7 +1855,6 @@ async function useFallbackWeather() {
 }
 function convertMeteoCode(c) { if(c>=50&&c<=69)return 500; if(c>=70&&c<=79)return 600; return 800; }
 function applyWeather(d, r) {
-    const t = Math.round(d.main.temp);
     if (r) { const h = new Date().getHours(); centerNode.icon = (h>6&&h<18) ? "☀️" : "🌙"; }
     const c = d.weather[0].id;
     wParts = []; // ← 날씨 파티클 초기화 (버그 수정: 잔상 제거)
@@ -1863,7 +1862,6 @@ function applyWeather(d, r) {
     else if (c>=600&&c<700) { createSnow(); centerNode.icon="❄️"; }
     else if (c>800) centerNode.icon="☁️";
     updateNodeVisuals();
-    showWeatherToast(d.name, `${t}°C`);
 }
 function showWeatherToast(l, i, duration=3000) {
     const t = document.getElementById('weather-toast');
