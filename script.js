@@ -1168,16 +1168,24 @@ function submitMission() {
 function _attemptRandomWinnerDraw(date, memberName) {
     const missionDateRef = missionsRef.child(date);
     const prevDate = _getPrevKstDateStr(date);
-    missionsRef.child(prevDate).child('_randomWinner').once('value').then(snap => {
-        const prevWinnerName = snap.exists() ? snap.val().memberName : null;
+    Promise.all([
+        missionsRef.child(prevDate).child('_randomWinner').once('value'),
+        missionDateRef.child('_firstPlace').once('value')
+    ]).then(([prevSnap, firstPlaceSnap]) => {
+        const prevWinnerName = prevSnap.exists() ? prevSnap.val().memberName : null;
         if (prevWinnerName && prevWinnerName === memberName) return; // 연속 2일 당첨 방지
+        const firstPlaceSessionId = firstPlaceSnap.exists() ? firstPlaceSnap.val().sessionId : null;
+        if (firstPlaceSessionId === mySessionId) return; // 1등 당첨자는 랜덤 추첨 대상에서 제외 (재제출로 인한 중복 당첨 방지)
         missionDateRef.child('_randomWinner').transaction(current => {
+            const entrants = (current && current.entrants) || {};
+            if (entrants[mySessionId]) return; // 이미 이 세션이 참가한 추첨 — 재제출로 인한 확률 부풀리기 방지 (트랜잭션 중단, 변경 없음)
             const count = (current && current.count) || 0;
             const newCount = count + 1;
+            const newEntrants = { ...entrants, [mySessionId]: true };
             if (Math.random() < 1 / newCount) {
-                return { sessionId: mySessionId, memberName: memberName, timestamp: Date.now(), count: newCount };
+                return { sessionId: mySessionId, memberName: memberName, timestamp: Date.now(), count: newCount, entrants: newEntrants };
             }
-            return { ...current, count: newCount };
+            return { ...current, count: newCount, entrants: newEntrants };
         }).catch(() => {});
     }).catch(() => {});
 }
