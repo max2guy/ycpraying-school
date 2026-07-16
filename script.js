@@ -1052,8 +1052,10 @@ function openMissionPopup() {
     document.getElementById('mission-file-input').value = '';
     document.getElementById('mission-upload-placeholder').style.display = 'flex';
     document.getElementById('mission-photo-preview').style.display = 'none';
-    document.getElementById('mission-upload-section').style.display = 'block';
     document.getElementById('mission-done-section').style.display = 'none';
+    const windowOpen = isMissionSubmitWindowOpen();
+    document.getElementById('mission-upload-section').style.display = windowOpen ? 'block' : 'none';
+    document.getElementById('mission-time-blocked').style.display = windowOpen ? 'none' : 'flex';
     const submitBtn = document.getElementById('mission-submit-btn');
     submitBtn.disabled = false;
     submitBtn.textContent = '✅ 인증 제출하기';
@@ -1088,6 +1090,7 @@ function closeMissionPopup() {
 
 function _showMissionCompleted(photoData, prayerText) {
     document.getElementById('mission-upload-section').style.display = 'none';
+    document.getElementById('mission-time-blocked').style.display = 'none';
     document.getElementById('mission-done-section').style.display = 'flex';
     const img = document.getElementById('mission-done-img');
     if (photoData) img.src = photoData;
@@ -1152,6 +1155,7 @@ function submitMission() {
 }
 
 function editMissionSubmission() {
+    if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증은 오전 7시부터 자정까지만 다시 제출할 수 있어요.'); return; }
     if (!confirm('제출한 인증을 취소하고 사진을 다시 선택할까요?')) return;
     const mission = getTodayMission();
     if (!mission) return;
@@ -1161,6 +1165,7 @@ function editMissionSubmission() {
         document.getElementById('mission-upload-placeholder').style.display = 'flex';
         document.getElementById('mission-photo-preview').style.display = 'none';
         document.getElementById('mission-upload-section').style.display = 'block';
+        document.getElementById('mission-time-blocked').style.display = 'none';
         document.getElementById('mission-done-section').style.display = 'none';
         document.getElementById('mission-prayer-input').value = _missionSubmittedPrayerText || '';
         const submitBtn = document.getElementById('mission-submit-btn');
