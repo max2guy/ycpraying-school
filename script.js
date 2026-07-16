@@ -1039,9 +1039,11 @@ let _missionPopupListener = null;
 let _missionCompletionsCache = {};
 let _missionSubmittedPrayerText = '';
 
-function openMissionPopup() {
-    const mission = getTodayMission();
+function openMissionPopup(selectedMission) {
+    const currentMission = getTodayMission();
+    const mission = selectedMission || currentMission;
     if (!mission) return;
+    const isPastMission = mission.date < currentMission.date;
 
     // 진행 상황 업데이트
     document.getElementById('mission-day-badge').textContent = mission.label;
@@ -1049,19 +1051,43 @@ function openMissionPopup() {
     document.getElementById('mission-progress-fill').style.width = `${(mission.day / 7) * 100}%`;
     document.getElementById('mission-scripture-range').textContent = mission.range;
     document.getElementById('mission-scripture-desc').textContent = mission.desc;
-    document.getElementById('mission-scripture-label').textContent = mission.noSubmit ? '오늘의 암송 구절' : '오늘의 필사 구절';
+    document.getElementById('mission-scripture-label').textContent = mission.noSubmit ? '오늘의 암송 구절' : (isPastMission ? '지난 필사 구절' : '오늘의 필사 구절');
 
-    if (mission.noSubmit) {
+    const historyEl = document.getElementById('mission-history');
+    const historyMissions = MISSION_SCHEDULE.filter(m => m.date < currentMission.date);
+    historyEl.style.display = historyMissions.length ? 'flex' : 'none';
+    historyEl.innerHTML = historyMissions.length
+        ? `<span class="mission-history-label">지난 미션 보기</span>${historyMissions.map(m => `<button class="mission-history-btn${m.date === mission.date ? ' active' : ''}" onclick="openMissionPopup(MISSION_SCHEDULE[${m.day - 1}])">${m.label}</button>`).join('')}${isPastMission ? '<button class="mission-history-btn" onclick="openMissionPopup()">오늘</button>' : ''}`
+        : '';
+
+    if (mission.noSubmit || isPastMission) {
         document.getElementById('mission-gift-banner').style.display = 'none';
         document.getElementById('mission-time-blocked').style.display = 'none';
         document.getElementById('mission-upload-section').style.display = 'none';
         document.getElementById('mission-done-section').style.display = 'none';
-        document.getElementById('mission-members-section').style.display = 'none';
+        document.getElementById('mission-members-section').style.display = mission.noSubmit ? 'none' : '';
         if (_missionPopupListener) { _missionPopupListener.ref.off('value', _missionPopupListener.cb); _missionPopupListener = null; }
+        const readonlyNote = document.getElementById('mission-readonly-note');
+        if (readonlyNote) readonlyNote.remove();
+        if (isPastMission) {
+            document.querySelector('.mission-members-title').textContent = '🙏 완료한 멤버';
+            const missionRef = missionsRef.child(mission.date);
+            const cb = snap => _renderMissionMembers(snap.val() || {});
+            missionRef.on('value', cb);
+            _missionPopupListener = { ref: missionRef, cb };
+            const note = document.createElement('div');
+            note.className = 'mission-readonly-note';
+            note.id = 'mission-readonly-note';
+            note.textContent = '지난 미션은 읽기 전용입니다. 인증 사진을 눌러 기도문과 함께 볼 수 있어요.';
+            document.getElementById('mission-members-section').before(note);
+        }
         document.getElementById('mission-popup').classList.add('active');
         return;
     }
+    const readonlyNote = document.getElementById('mission-readonly-note');
+    if (readonlyNote) readonlyNote.remove();
     document.getElementById('mission-members-section').style.display = '';
+    document.querySelector('.mission-members-title').textContent = '🙏 오늘 완료한 멤버';
 
     // 업로드 상태 초기화
     _missionPhotoData = null;

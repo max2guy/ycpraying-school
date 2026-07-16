@@ -668,6 +668,11 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-progress-track { flex:1; height:6px; background:rgba(0,0,0,0.08); border-radius:3px; overflow:hidden; }
 .mission-progress-fill { height:100%; background:linear-gradient(90deg,var(--rose),#FF85B0); border-radius:3px; transition:width 0.6s ease; }
 .mission-progress-label { font-size:0.70rem; color:var(--text-dim); white-space:nowrap; }
+.mission-history { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.mission-history-label { font-size:0.74rem; font-weight:700; color:var(--text-dim); margin-right:2px; }
+.mission-history-btn { border:1px solid var(--rose-border); border-radius:50px; background:var(--bg); color:var(--text-dim); padding:5px 10px; font-size:0.72rem; font-weight:700; cursor:pointer; }
+.mission-history-btn.active { background:var(--rose-soft); color:var(--rose-dim); }
+.mission-readonly-note { font-size:0.76rem; text-align:center; color:var(--text-dim); background:var(--rose-soft); border:1px solid var(--rose-border); border-radius:var(--r-md); padding:9px 12px; }
 
 .mission-scripture-card { background:var(--glass); border:1.5px solid var(--rose-border); border-radius:var(--r-md); padding:16px; text-align:center; }
 .mission-scripture-label { font-size:0.70rem; color:var(--text-dim); margin-bottom:6px; letter-spacing:0.04em; }
