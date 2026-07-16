@@ -1220,7 +1220,7 @@ function checkAdmin() {
             document.getElementById('admin-pw').value = '';
             if (currentMemberData) renderPrayers();
         })
-        .catch(() => alert("비밀번호 오류"));
+        .catch(err => alert("로그인 실패 (" + err.code + ")\n" + err.message));
 }
 
 // ── 간단 입력 모달 (prompt 대체) ──
