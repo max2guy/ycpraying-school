@@ -164,7 +164,6 @@ function getTodayMission() {
     const btn = document.getElementById('mission-btn');
     if (btn) btn.style.display = 'flex';
 })();
-_checkRandomWinnerNotification();
 
 let mySessionId = localStorage.getItem('mySessionId');
 if (!mySessionId) {
@@ -1666,6 +1665,7 @@ function enterApp() {
         document.getElementById('intro-screen').style.display = 'none';
         isAppVisible = true;
         showWeatherToast("환영합니다", "배경음악이 재생됩니다 🎵");
+        _checkRandomWinnerNotification();
     }, 800);
 }
 function onPlayerStateChange(e) {
