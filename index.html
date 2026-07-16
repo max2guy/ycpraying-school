@@ -57,6 +57,7 @@
 
     <!-- 라이트박스 -->
     <div id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close-btn" onclick="event.stopPropagation(); closeLightbox()" aria-label="닫기">&times;</button>
         <img id="lightbox-img" src="" alt="확대 이미지" onclick="event.stopPropagation()">
         <div id="lightbox-caption" onclick="event.stopPropagation()"></div>
     </div>
@@ -190,7 +191,7 @@
                         <button class="mission-change-btn" onclick="document.getElementById('mission-file-input').click()">📷 사진 변경</button>
                     </div>
                     <input type="file" id="mission-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleMissionPhotoSelect(event)">
-                    <textarea id="mission-prayer-input" class="simple-modal-input" rows="3" maxlength="300" placeholder="오늘의 기도문을 적어주세요 🙏" style="margin-top:10px"></textarea>
+                    <textarea id="mission-prayer-input" class="simple-modal-input" rows="3" maxlength="500" placeholder="오늘의 기도문을 적어주세요 🙏" style="margin-top:10px"></textarea>
                     <button class="mission-submit-btn" id="mission-submit-btn" onclick="submitMission()">✅ 인증 제출하기</button>
                 </div>
                 <!-- 완료 상태 -->
