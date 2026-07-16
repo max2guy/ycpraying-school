@@ -1730,11 +1730,19 @@ function createFirework(x, y) {
     });
 })();
 
-function openLightbox(src) {
+function openLightbox(src, caption) {
     const lb = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
+    const captionEl = document.getElementById('lightbox-caption');
     img.src = src;
     img.style.transform = '';
+    if (caption) {
+        captionEl.textContent = caption;
+        captionEl.classList.add('active');
+    } else {
+        captionEl.textContent = '';
+        captionEl.classList.remove('active');
+    }
     lb.classList.add('active');
 }
 function closeLightbox() {
