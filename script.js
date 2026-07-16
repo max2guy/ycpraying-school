@@ -1617,11 +1617,13 @@ function renderPrayers() {
         pinBtn.innerHTML = `<span class="material-symbols-rounded">push_pin</span>`;
         pinBtn.addEventListener('click', () => togglePin(i));
 
-        // 수정 버튼
-        const editBtn = createSafeElement("button", "icon-btn edit-btn");
-        editBtn.title = '수정'; editBtn.setAttribute('aria-label','내용 수정');
-        editBtn.innerHTML = `<span class="material-symbols-rounded">edit</span>`;
-        editBtn.addEventListener('click', () => editPrayer(i));
+        // 수정 버튼 (미션에서 자동 기록된 기도문은 수정 불가)
+        const editBtn = p.missionDate ? null : createSafeElement("button", "icon-btn edit-btn");
+        if (editBtn) {
+            editBtn.title = '수정'; editBtn.setAttribute('aria-label','내용 수정');
+            editBtn.innerHTML = `<span class="material-symbols-rounded">edit</span>`;
+            editBtn.addEventListener('click', () => editPrayer(i));
+        }
 
         // 답글 버튼
         const replyBtn = createSafeElement("button", "icon-btn reply-btn");
@@ -1635,7 +1637,9 @@ function renderPrayers() {
         delBtn.innerHTML = `<span class="material-symbols-rounded">delete_forever</span>`;
         delBtn.addEventListener('click', () => isAdmin ? adminDeletePrayer(i) : deletePrayer(i));
 
-        actionGroup.append(amenBtn, pinBtn, editBtn, replyBtn, delBtn);
+        actionGroup.append(amenBtn, pinBtn);
+        if (editBtn) actionGroup.append(editBtn);
+        actionGroup.append(replyBtn, delBtn);
         div.append(header, content, actionGroup);
 
         // 답글
@@ -1698,6 +1702,10 @@ function addPrayer() {
     database.ref('prayerEvents').push({ type:'new_prayer', memberName:currentMemberData.name, content:v, senderId:mySessionId, timestamp:firebase.database.ServerValue.TIMESTAMP });
 }
 function editPrayer(i) {
+    if (currentMemberData.prayers[i].missionDate) {
+        alert('미션에서 자동 기록된 기도문은 수정할 수 없습니다.');
+        return;
+    }
     openSimpleModal('기도제목 수정', 'textarea', '수정할 내용을 입력하세요', currentMemberData.prayers[i].content, value => {
         if (!value) return;
         if (containsBannedWords(value)) return alert("부적절한 내용입니다.");
