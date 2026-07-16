@@ -696,7 +696,8 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-member-delete-btn { background:rgba(255,112,150,0.15); color:var(--danger); border:none; width:18px; height:18px; border-radius:50%; font-size:0.85rem; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-left:2px; transition:background .2s; }
 .mission-member-delete-btn:hover { background:rgba(255,112,150,0.28); }
 .mission-no-members { width:100%; text-align:center; padding:20px 16px; color:var(--text-dim); font-size:0.83rem; line-height:1.7; }
-.mission-gift-banner { display:flex; align-items:center; justify-content:center; gap:6px; background:linear-gradient(135deg,#FFD86B,#FFB74D); color:#7A4A00; font-size:0.82rem; font-weight:800; padding:10px 14px; border-radius:var(--r-md); text-align:center; }
+.mission-gift-banner { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:linear-gradient(135deg,#FFD86B,#FFB74D); color:#7A4A00; font-size:0.82rem; font-weight:800; padding:10px 14px; border-radius:var(--r-md); text-align:center; }
+.mission-gift-random-note { font-size:0.72rem; font-weight:600; opacity:0.85; }
 .mission-gift-badge { font-size:0.85rem; margin-left:2px; }
 
 /* ── 시크릿기프트 당첨 축하 팝업 ── */
