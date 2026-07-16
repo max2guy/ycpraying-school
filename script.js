@@ -1110,21 +1110,30 @@ function submitMission() {
     if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
     const memberName = document.getElementById('mission-name-input').value.trim();
     if (!memberName) { alert('✍️ 이름을 입력해주세요!'); return; }
+    const prayerText = document.getElementById('mission-prayer-input').value.trim();
+    if (!prayerText) { alert('🙏 기도문을 적어주세요!'); return; }
     const mission = getTodayMission();
     if (!mission) return;
     const btn = document.getElementById('mission-submit-btn');
     btn.disabled = true; btn.textContent = '⏳ 제출 중...';
     localStorage.setItem('missionMemberName', memberName);
-    missionsRef.child(mission.date).child(mySessionId).set({
+    const missionDateRef = missionsRef.child(mission.date);
+    missionDateRef.child(mySessionId).set({
         photoData: _missionPhotoData,
         timestamp: Date.now(),
         day: mission.day,
-        memberName: memberName
+        memberName: memberName,
+        prayerText: prayerText
     }).then(() => {
-        _showMissionCompleted(_missionPhotoData);
+        _missionSubmittedPrayerText = prayerText;
+        _showMissionCompleted(_missionPhotoData, prayerText);
         const rect = btn.getBoundingClientRect();
         createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
         showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000);
+        missionDateRef.child('_firstPlace').transaction(current => {
+            if (current === null) return { sessionId: mySessionId, memberName: memberName, timestamp: Date.now() };
+            return undefined;
+        }).catch(() => {});
     }).catch(err => {
         alert('제출 실패: ' + err.message);
         btn.disabled = false; btn.textContent = '✅ 인증 제출하기';
