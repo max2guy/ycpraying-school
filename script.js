@@ -1200,6 +1200,7 @@ function submitMission() {
         memberName: memberName,
         prayerText: prayerText
     }).then(() => {
+        ensureMissionMemberNode(memberName);
         _missionSubmittedPrayerText = prayerText;
         _showMissionCompleted(_missionPhotoData, prayerText);
         const showPlainCelebration = () => {
@@ -1223,6 +1224,26 @@ function submitMission() {
         alert('제출 실패: ' + err.message);
         btn.disabled = false; btn.textContent = '✅ 인증 제출하기';
     });
+}
+
+function ensureMissionMemberNode(memberName) {
+    const normalizedName = memberName.trim().toLocaleLowerCase('ko-KR');
+    membersRef.once('value').then(snap => {
+        const exists = Object.values(snap.val() || {}).some(member =>
+            member.name && member.name.trim().toLocaleLowerCase('ko-KR') === normalizedName
+        );
+        if (!exists) {
+            membersRef.push({
+                id: `mission_${Date.now()}`,
+                name: memberName,
+                type: 'member',
+                color: getRandomColor(),
+                prayers: [],
+                rotation: 0,
+                rotationDirection: 1
+            });
+        }
+    }).catch(() => {});
 }
 
 function _attemptRandomWinnerDraw(date, memberName) {
