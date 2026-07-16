@@ -1200,7 +1200,7 @@ function submitMission() {
         memberName: memberName,
         prayerText: prayerText
     }).then(() => {
-        ensureMissionMemberNode(memberName);
+        ensureMissionMemberNode(memberName, prayerText, mission.date);
         _missionSubmittedPrayerText = prayerText;
         _showMissionCompleted(_missionPhotoData, prayerText);
         const showPlainCelebration = () => {
@@ -1226,19 +1226,28 @@ function submitMission() {
     });
 }
 
-function ensureMissionMemberNode(memberName) {
+function ensureMissionMemberNode(memberName, prayerText, missionDate) {
     const normalizedName = memberName.trim().toLocaleLowerCase('ko-KR');
     membersRef.once('value').then(snap => {
-        const exists = Object.values(snap.val() || {}).some(member =>
+        const membersData = snap.val() || {};
+        const existing = Object.entries(membersData).find(([, member]) =>
             member.name && member.name.trim().toLocaleLowerCase('ko-KR') === normalizedName
         );
-        if (!exists) {
+        const missionPrayer = { content: prayerText, date: missionDate, missionDate };
+        if (existing) {
+            const [key, member] = existing;
+            const prayers = Array.isArray(member.prayers) ? [...member.prayers] : Object.values(member.prayers || {});
+            const existingPrayerIndex = prayers.findIndex(prayer => prayer.missionDate === missionDate);
+            if (existingPrayerIndex >= 0) prayers[existingPrayerIndex] = { ...prayers[existingPrayerIndex], ...missionPrayer };
+            else prayers.unshift(missionPrayer);
+            membersRef.child(key).update({ prayers });
+        } else {
             membersRef.push({
                 id: `mission_${Date.now()}`,
                 name: memberName,
                 type: 'member',
                 color: getRandomColor(),
-                prayers: [],
+                prayers: [missionPrayer],
                 rotation: 0,
                 rotationDirection: 1
             });
