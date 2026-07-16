@@ -1618,8 +1618,8 @@ function renderPrayers() {
         pinBtn.innerHTML = `<span class="material-symbols-rounded">push_pin</span>`;
         pinBtn.addEventListener('click', () => togglePin(i));
 
-        // 수정 버튼 (미션에서 자동 기록된 기도문은 수정 불가)
-        const editBtn = p.missionDate ? null : createSafeElement("button", "icon-btn edit-btn");
+        // 수정 버튼 (미션 자동 기록 기도문은 관리자만 수정 가능)
+        const editBtn = (!p.missionDate || isAdmin) ? createSafeElement("button", "icon-btn edit-btn") : null;
         if (editBtn) {
             editBtn.title = '수정'; editBtn.setAttribute('aria-label','내용 수정');
             editBtn.innerHTML = `<span class="material-symbols-rounded">edit</span>`;
@@ -1632,15 +1632,18 @@ function renderPrayers() {
         replyBtn.innerHTML = `<span class="material-symbols-rounded">chat_bubble</span>`;
         replyBtn.addEventListener('click', () => addReply(i));
 
-        // 삭제 버튼
-        const delBtn = createSafeElement("button", isAdmin ? "icon-btn admin-delete-btn-icon" : "icon-btn delete-btn");
-        delBtn.title = '삭제'; delBtn.setAttribute('aria-label','삭제');
-        delBtn.innerHTML = `<span class="material-symbols-rounded">delete_forever</span>`;
-        delBtn.addEventListener('click', () => isAdmin ? adminDeletePrayer(i) : deletePrayer(i));
+        // 삭제 버튼 (미션 자동 기록 기도문은 관리자만 삭제 가능)
+        const delBtn = (!p.missionDate || isAdmin) ? createSafeElement("button", isAdmin ? "icon-btn admin-delete-btn-icon" : "icon-btn delete-btn") : null;
+        if (delBtn) {
+            delBtn.title = '삭제'; delBtn.setAttribute('aria-label','삭제');
+            delBtn.innerHTML = `<span class="material-symbols-rounded">delete_forever</span>`;
+            delBtn.addEventListener('click', () => isAdmin ? adminDeletePrayer(i) : deletePrayer(i));
+        }
 
         actionGroup.append(amenBtn, pinBtn);
         if (editBtn) actionGroup.append(editBtn);
-        actionGroup.append(replyBtn, delBtn);
+        actionGroup.append(replyBtn);
+        if (delBtn) actionGroup.append(delBtn);
         div.append(header, content, actionGroup);
 
         // 답글
@@ -1679,6 +1682,7 @@ function togglePin(i) {
     membersRef.child(currentMemberData.firebaseKey).update({ prayers:currentMemberData.prayers }).then(() => renderPrayers());
 }
 function deletePrayer(i) {
+    if (currentMemberData.prayers[i].missionDate) { alert('미션에서 자동 기록된 기도문은 관리자만 삭제할 수 있습니다.'); return; }
     if (!confirm("삭제하시겠습니까?")) return;
     currentMemberData.prayers.splice(i, 1);
     const d = currentMemberData.prayers.length > 0 ? currentMemberData.prayers : [];
@@ -1686,6 +1690,7 @@ function deletePrayer(i) {
     closePrayerPopup();
 }
 function adminDeletePrayer(i) {
+    if (!isAdmin) { alert('관리자만 삭제할 수 있습니다.'); return; }
     if (!confirm("관리자 권한으로 삭제하시겠습니까?")) return;
     currentMemberData.prayers.splice(i, 1);
     const d = currentMemberData.prayers.length > 0 ? currentMemberData.prayers : [];
@@ -1703,8 +1708,8 @@ function addPrayer() {
     database.ref('prayerEvents').push({ type:'new_prayer', memberName:currentMemberData.name, content:v, senderId:mySessionId, timestamp:firebase.database.ServerValue.TIMESTAMP });
 }
 function editPrayer(i) {
-    if (currentMemberData.prayers[i].missionDate) {
-        alert('미션에서 자동 기록된 기도문은 수정할 수 없습니다.');
+    if (currentMemberData.prayers[i].missionDate && !isAdmin) {
+        alert('미션에서 자동 기록된 기도문은 관리자만 수정할 수 있습니다.');
         return;
     }
     openSimpleModal('기도제목 수정', 'textarea', '수정할 내용을 입력하세요', currentMemberData.prayers[i].content, value => {
