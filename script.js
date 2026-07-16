@@ -63,6 +63,7 @@ document.getElementById('btn-close-install').addEventListener('click', () => {
 // ── UI 핸들러 ──
 let isFabOpen = false;
 function toggleFabMenu() {
+    handleEasterEggClick();
     isFabOpen = !isFabOpen;
     const c = document.getElementById('menu-container');
     c.classList.toggle('menu-open', isFabOpen);
@@ -510,6 +511,9 @@ const originalCenterName = "연천장로교회\n중고등부\n수련회 기도�
 
 function handleOnlineCounterClick() {
     if (isAdmin) { showConnectedUsers(); return; }
+}
+function handleEasterEggClick() {
+    if (isAdmin) return;
     eggClickCount++;
     if (eggTimer) clearTimeout(eggTimer);
     eggTimer = setTimeout(() => { eggClickCount = 0; }, 1500);
@@ -521,7 +525,7 @@ function triggerHeartRain() {
     if (isHeartRain) {
         createHearts();
         centerNode.icon = "💖";
-        centerNode.name = "수련회를 위한\n우리 기도";
+        centerNode.name = "수련회를 위한\n우리의 기도\n중고등부 야르";
         updateGraph(true);
         showWeatherToast("이스터에그 발견! 🎁", "사랑이 가득하네요 🥰", 6000);
         wctx.clearRect(0, 0, wc.width, wc.height);
@@ -919,7 +923,7 @@ function updateNodeVisuals() {
             d.name.split("\n").forEach((l,i) => {
                 textEl.append("tspan").text(l).attr("x",0)
                     .attr("dy", i===0 ? "2.5em" : "1.35em")
-                    .attr("font-size","13px").attr("fill","#7A4820").attr("font-weight","900");
+                    .attr("font-size", isHeartRain && i===2 ? "17px" : "13px").attr("fill","#7A4820").attr("font-weight","900");
             });
             rectEl.style("display","none");
             textEl.transition().delay(textDelay).duration(900).style("opacity",1);
