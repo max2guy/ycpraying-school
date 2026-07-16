@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
-    <link rel="stylesheet" href="style.css?v=82">
+    <link rel="stylesheet" href="style.css?v=83">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
@@ -192,7 +192,11 @@
                     </div>
                     <div class="mission-photo-preview" id="mission-photo-preview" style="display:none">
                         <img id="mission-preview-img" src="" alt="인증 사진 미리보기" onclick="openLightbox(this.src)">
-                        <button class="mission-change-btn" onclick="document.getElementById('mission-file-input').click()">📷 사진 변경</button>
+                        <div class="mission-photo-actions">
+                            <button class="mission-change-btn" onclick="rotateMissionPhoto(-90)">↺ 왼쪽 회전</button>
+                            <button class="mission-change-btn" onclick="rotateMissionPhoto(90)">↻ 오른쪽 회전</button>
+                            <button class="mission-change-btn" onclick="document.getElementById('mission-file-input').click()">📷 사진 변경</button>
+                        </div>
                     </div>
                     <input type="file" id="mission-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleMissionPhotoSelect(event)">
                     <input type="file" id="mission-gallery-input" accept="image/*" style="display:none" onchange="handleMissionPhotoSelect(event)">

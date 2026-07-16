@@ -1137,6 +1137,23 @@ function handleMissionPhotoSelect(event) {
     };
 }
 
+function rotateMissionPhoto(degrees) {
+    if (!_missionPhotoData) return;
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.height;
+        canvas.height = img.width;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(degrees * Math.PI / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        _missionPhotoData = canvas.toDataURL('image/jpeg', 0.70);
+        document.getElementById('mission-preview-img').src = _missionPhotoData;
+    };
+    img.src = _missionPhotoData;
+}
+
 function submitMission() {
     if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증은 오전 7시부터 자정까지만 제출할 수 있어요.'); return; }
     if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
