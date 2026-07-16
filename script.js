@@ -1302,7 +1302,7 @@ function openGiftWinnersModal() {
     document.getElementById('gift-winners-modal').classList.add('active');
     missionsRef.once('value').then(snap => {
         const data = snap.val() || {};
-        const dates = Object.keys(data).sort();
+        const dates = Object.keys(data).filter(date => data[date]._firstPlace || data[date]._randomWinner).sort();
         if (dates.length === 0) { listEl.textContent = '당첨 기록이 없어요.'; return; }
         listEl.innerHTML = dates.map(date => {
             const d = data[date];
@@ -1311,6 +1311,28 @@ function openGiftWinnersModal() {
             return `<div>${escHtml(date)} — 1등: ${first} · 랜덤: ${random}</div>`;
         }).join('');
     }).catch(err => { listEl.textContent = '불러오기 실패: ' + err.message; });
+}
+function resetGiftWinners() {
+    if (!isAdmin) return;
+    if (!confirm('모든 당첨자 기록을 초기화할까요?\n인증 사진과 기도문은 삭제되지 않습니다.')) return;
+    const resetBtn = document.querySelector('.gift-winners-reset-btn');
+    resetBtn.disabled = true;
+    resetBtn.textContent = '초기화 중...';
+    missionsRef.once('value').then(snap => {
+        const updates = {};
+        Object.keys(snap.val() || {}).forEach(date => {
+            updates[`${date}/_firstPlace`] = null;
+            updates[`${date}/_randomWinner`] = null;
+        });
+        return missionsRef.update(updates);
+    }).then(() => {
+        document.getElementById('gift-winners-list').textContent = '당첨 기록이 초기화되었습니다.';
+    }).catch(err => {
+        alert('초기화 실패: ' + err.message);
+    }).finally(() => {
+        resetBtn.disabled = false;
+        resetBtn.textContent = '당첨자 기록 초기화';
+    });
 }
 function closeGiftWinnersModal() {
     document.getElementById('gift-winners-modal').classList.remove('active');

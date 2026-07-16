@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
-    <link rel="stylesheet" href="style.css?v=78">
+    <link rel="stylesheet" href="style.css?v=79">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
@@ -113,6 +113,7 @@
         <div class="admin-box" style="width:300px;max-height:70vh;overflow-y:auto;" onclick="event.stopPropagation()">
             <h3>🎁 당첨자 목록</h3>
             <div id="gift-winners-list" style="text-align:left;font-size:0.85rem;line-height:1.8;color:var(--text);"></div>
+            <button class="gift-winners-reset-btn" onclick="resetGiftWinners()">당첨자 기록 초기화</button>
             <button class="color-close-btn" onclick="closeGiftWinnersModal()">닫기</button>
         </div>
     </div>
