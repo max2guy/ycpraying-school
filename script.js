@@ -138,6 +138,17 @@ function getTodayKstDateStr() {
     const kst = new Date(Date.now() + 9 * 3600 * 1000);
     return kst.toISOString().slice(0, 10);
 }
+function getKstHour() {
+    return new Date(Date.now() + 9 * 3600 * 1000).getUTCHours();
+}
+function isMissionSubmitWindowOpen() {
+    return getKstHour() >= 7; // 07:00~23:59 허용, 00:00~06:59 차단
+}
+function _getPrevKstDateStr(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+}
 function getTodayMission() {
     // 테스트용: ?missionTest=1~7 → 오늘 날짜와 무관하게 해당 일차 미리보기
     const testDay = Number(new URLSearchParams(location.search).get('missionTest'));
