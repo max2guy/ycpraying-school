@@ -164,7 +164,7 @@ function getTodayMission() {
     const btn = document.getElementById('mission-btn');
     if (btn) btn.style.display = 'flex';
 })();
-
+_checkRandomWinnerNotification();
 
 let mySessionId = localStorage.getItem('mySessionId');
 if (!mySessionId) {
@@ -1200,6 +1200,20 @@ function _showWinnerCelebration(message) {
 }
 function closeMissionWinnerPopup() {
     document.getElementById('mission-winner-popup').classList.remove('active');
+}
+
+function _checkRandomWinnerNotification() {
+    const today = getTodayKstDateStr();
+    const yesterday = _getPrevKstDateStr(today);
+    const flagKey = 'randomWinnerNotified_' + yesterday;
+    if (localStorage.getItem(flagKey)) return;
+    missionsRef.child(yesterday).child('_randomWinner').once('value').then(snap => {
+        if (!snap.exists()) return;
+        const v = snap.val();
+        if (v.sessionId !== mySessionId) return;
+        localStorage.setItem(flagKey, '1');
+        _showWinnerCelebration('어제의 시크릿기프트 랜덤 당첨! 🎁');
+    }).catch(() => {});
 }
 
 function editMissionSubmission() {
