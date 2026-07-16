@@ -1046,6 +1046,8 @@ function openMissionPopup() {
     submitBtn.disabled = false;
     submitBtn.textContent = '✅ 인증 제출하기';
 
+    document.getElementById('mission-name-input').value = localStorage.getItem('missionMemberName') || '';
+
     // 해당 일차 이미 완료했는지 확인 (실제 날짜가 아닌 미션 스케줄의 날짜를 키로 사용)
     const missionRef = missionsRef.child(mission.date);
     missionRef.child(mySessionId).once('value').then(snap => {
@@ -1097,12 +1099,13 @@ function handleMissionPhotoSelect(event) {
 
 function submitMission() {
     if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
+    const memberName = document.getElementById('mission-name-input').value.trim();
+    if (!memberName) { alert('✍️ 이름을 입력해주세요!'); return; }
     const mission = getTodayMission();
     if (!mission) return;
     const btn = document.getElementById('mission-submit-btn');
     btn.disabled = true; btn.textContent = '⏳ 제출 중...';
-    const myMember = globalNodes.find(n => n.sessionId === mySessionId);
-    const memberName = myMember ? myMember.name : '멤버';
+    localStorage.setItem('missionMemberName', memberName);
     missionsRef.child(mission.date).child(mySessionId).set({
         photoData: _missionPhotoData,
         timestamp: Date.now(),
