@@ -1151,6 +1151,7 @@ function editMissionSubmission() {
         document.getElementById('mission-photo-preview').style.display = 'none';
         document.getElementById('mission-upload-section').style.display = 'block';
         document.getElementById('mission-done-section').style.display = 'none';
+        document.getElementById('mission-prayer-input').value = _missionSubmittedPrayerText || '';
         const submitBtn = document.getElementById('mission-submit-btn');
         submitBtn.disabled = false;
         submitBtn.textContent = '✅ 인증 제출하기';
