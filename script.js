@@ -1743,7 +1743,6 @@ function enterApp() {
     setTimeout(() => {
         document.getElementById('intro-screen').style.display = 'none';
         isAppVisible = true;
-        showWeatherToast("환영합니다", "배경음악이 재생됩니다 🎵");
         _checkRandomWinnerNotification();
     }, 800);
 }
