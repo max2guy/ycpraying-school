@@ -1023,6 +1023,7 @@ function toggleCampPopup()  { document.getElementById('camp-popup').classList.to
 let _missionPhotoData = null;
 let _missionPopupListener = null;
 let _missionCompletionsCache = {};
+let _missionSubmittedPrayerText = '';
 
 function openMissionPopup() {
     const mission = getTodayMission();
@@ -1047,11 +1048,17 @@ function openMissionPopup() {
     submitBtn.textContent = '✅ 인증 제출하기';
 
     document.getElementById('mission-name-input').value = localStorage.getItem('missionMemberName') || '';
+    document.getElementById('mission-prayer-input').value = '';
+    _missionSubmittedPrayerText = '';
 
     // 해당 일차 이미 완료했는지 확인 (실제 날짜가 아닌 미션 스케줄의 날짜를 키로 사용)
     const missionRef = missionsRef.child(mission.date);
     missionRef.child(mySessionId).once('value').then(snap => {
-        if (snap.exists()) _showMissionCompleted(snap.val().photoData);
+        if (snap.exists()) {
+            const v = snap.val();
+            _missionSubmittedPrayerText = v.prayerText || '';
+            _showMissionCompleted(v.photoData, v.prayerText);
+        }
     });
 
     // 해당 일차 전체 완료 현황 실시간 구독
@@ -1068,10 +1075,12 @@ function closeMissionPopup() {
     if (_missionPopupListener) { _missionPopupListener.ref.off('value', _missionPopupListener.cb); _missionPopupListener = null; }
 }
 
-function _showMissionCompleted(photoData) {
+function _showMissionCompleted(photoData, prayerText) {
     document.getElementById('mission-upload-section').style.display = 'none';
     document.getElementById('mission-done-section').style.display = 'flex';
-    if (photoData) document.getElementById('mission-done-img').src = photoData;
+    const img = document.getElementById('mission-done-img');
+    if (photoData) img.src = photoData;
+    img.dataset.caption = prayerText || '';
 }
 
 function handleMissionPhotoSelect(event) {
