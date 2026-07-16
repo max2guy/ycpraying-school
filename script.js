@@ -1598,6 +1598,7 @@ function renderPrayers() {
         const dateDiv = createSafeElement("div", "prayer-date");
         if (p.isPinned) { const pm = createSafeElement("span","pinned-mark"); pm.textContent = "📌"; dateDiv.appendChild(pm); }
         const dateSpan = createSafeElement("span"); dateSpan.textContent = p.date || ''; dateDiv.appendChild(dateSpan);
+        if (p.missionDate) { const autoBadge = createSafeElement("span", "prayer-auto-badge", "미션 자동입력"); dateDiv.appendChild(autoBadge); }
         header.appendChild(dateDiv);
 
         const content = createSafeElement("div","prayer-content", p.content);

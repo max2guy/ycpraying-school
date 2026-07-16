@@ -356,6 +356,7 @@ button,.float-btn,.icon-btn,.amen-btn,.setting-item,.camera-btn,.enter-btn {
 .prayer-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
 .prayer-date { font-size:0.72rem; color:var(--text-dim); font-weight:600; display:flex; align-items:center; gap:4px; }
 .pinned-mark { font-size:0.85rem; }
+.prayer-auto-badge { padding:2px 6px; border-radius:999px; background:rgba(255,133,176,0.14); color:var(--rose-deep); font-size:0.63rem; font-weight:800; }
 .prayer-content { font-size:0.97rem; line-height:1.65; color:var(--text); word-wrap:break-word; white-space:pre-wrap; margin-bottom:14px; font-weight:500; }
 .action-group { display:flex; justify-content:flex-end; align-items:center; gap:6px; padding-top:10px; border-top:1px solid rgba(255,180,210,0.20); }
 .icon-btn { background:rgba(255,180,210,0.10); border:none; border-radius:var(--r-sm); width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; color:var(--text-muted); }
