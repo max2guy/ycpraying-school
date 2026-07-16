@@ -107,6 +107,15 @@
         </div>
     </div>
 
+    <!-- 시크릿기프트 당첨자 목록 (관리자 전용) -->
+    <div id="gift-winners-modal" onclick="closeGiftWinnersModal()">
+        <div class="admin-box" style="width:300px;max-height:70vh;overflow-y:auto;" onclick="event.stopPropagation()">
+            <h3>🎁 당첨자 목록</h3>
+            <div id="gift-winners-list" style="text-align:left;font-size:0.85rem;line-height:1.8;color:var(--text);"></div>
+            <button class="color-close-btn" onclick="closeGiftWinnersModal()">닫기</button>
+        </div>
+    </div>
+
     <!-- 캠프 팝업 -->
     <div id="camp-popup" class="popup-overlay" onclick="toggleCampPopup()">
         <div class="popup-content" onclick="event.stopPropagation()">
@@ -335,6 +344,12 @@
                         <span class="material-symbols-rounded" style="font-size:1.1rem;color:#fff;">campaign</span>
                     </span>
                     <span class="setting-text">전체 업데이트 알림 발송</span>
+                </button>
+                <button class="setting-item" id="btn-gift-winners" onclick="openGiftWinnersModal(); closeSettingsModal();" aria-label="시크릿기프트 당첨자 목록" style="display:none;">
+                    <span class="setting-icon-badge" style="background:linear-gradient(135deg,#FFD86B,#FFB74D);">
+                        <span class="material-symbols-rounded" style="font-size:1.1rem;color:#fff;">redeem</span>
+                    </span>
+                    <span class="setting-text">시크릿기프트 당첨자 목록</span>
                 </button>
             </div>
             <div class="settings-version">✨ v1.0.0 | 연천장로교회 중고등부 ✨</div>

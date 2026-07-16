@@ -596,11 +596,15 @@ firebase.auth().onAuthStateChanged(user => {
         document.getElementById('body').classList.add('admin-mode');
         const btn = document.getElementById('btn-broadcast-update');
         if (btn) btn.style.display = '';
+        const giftBtn = document.getElementById('btn-gift-winners');
+        if (giftBtn) giftBtn.style.display = '';
     } else {
         isAdmin = false;
         document.getElementById('body').classList.remove('admin-mode');
         const btn = document.getElementById('btn-broadcast-update');
         if (btn) btn.style.display = 'none';
+        const giftBtn = document.getElementById('btn-gift-winners');
+        if (giftBtn) giftBtn.style.display = 'none';
     }
 });
 
@@ -1276,6 +1280,27 @@ function adminDeleteMissionSubmission(uid) {
     const mission = getTodayMission();
     if (!mission) return;
     missionsRef.child(mission.date).child(uid).remove().catch(err => alert('삭제 실패: ' + err.message));
+}
+
+function openGiftWinnersModal() {
+    if (!isAdmin) return;
+    const listEl = document.getElementById('gift-winners-list');
+    listEl.textContent = '불러오는 중...';
+    document.getElementById('gift-winners-modal').classList.add('active');
+    missionsRef.once('value').then(snap => {
+        const data = snap.val() || {};
+        const dates = Object.keys(data).sort();
+        if (dates.length === 0) { listEl.textContent = '당첨 기록이 없어요.'; return; }
+        listEl.innerHTML = dates.map(date => {
+            const d = data[date];
+            const first = d._firstPlace ? escHtml(d._firstPlace.memberName) : '-';
+            const random = d._randomWinner ? escHtml(d._randomWinner.memberName) : '-';
+            return `<div>${escHtml(date)} — 1등: ${first} · 랜덤: ${random}</div>`;
+        }).join('');
+    }).catch(err => { listEl.textContent = '불러오기 실패: ' + err.message; });
+}
+function closeGiftWinnersModal() {
+    document.getElementById('gift-winners-modal').classList.remove('active');
 }
 
 function _openMissionMemberPhoto(uid) {

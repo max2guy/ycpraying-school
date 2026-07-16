@@ -457,6 +457,9 @@ body.theme-s2 .amen-btn.active { background:rgba(231,76,60,0.18); color:#C0392B;
 /* ── COLOR MODAL ── */
 #color-modal { display:none; position:fixed; z-index:3000; inset:0; background:rgba(120,50,90,0.55); justify-content:center; align-items:center; }
 #color-modal.active { display:flex; animation:fadeIn .2s; }
+/* ── 당첨자 목록 모달 ── */
+#gift-winners-modal { display:none; position:fixed; inset:0; background:rgba(120,50,90,0.60); z-index:3000; justify-content:center; align-items:center; }
+#gift-winners-modal.active { display:flex; animation:fadeIn .2s; }
 .color-box { background:var(--bg); border:1.5px solid var(--rose-border); width:300px; border-radius:var(--r-lg); padding:24px; text-align:center; box-shadow:var(--shadow-lg); }
 .color-box h3 { margin:0 0 4px; color:var(--text); font-size:1rem; font-weight:800; }
 .color-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:16px; }
