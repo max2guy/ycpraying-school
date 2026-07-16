@@ -2,15 +2,27 @@
 
 ## 현재 상태
 - 브랜치: `main`
-- 최신 커밋: `b48e7d0` — chore: 캐시 버전 v1.2.5로 갱신
+- 최신 커밋: `4bda528` — `feat: KST 시간대 헬퍼 추가 (제출 가능 시각 판정용)` (Task 1)
 - 워킹트리 클린 (모두 커밋됨). `.claude/launch.json`만 untracked (로컬 dev 서버 설정, 커밋 대상 아님)
-- Firebase Hosting 배포 완료 ✅ (`https://ycpraying-school.web.app`, `script.js?v=102` 배포 및 브라우저 실사용 검증됨)
-- Cloud Functions 미배포 (Blaze 플랜 필요, 이전 세션부터 유지되는 상태)
-- 로컬 main이 origin/main보다 21개 커밋 앞서 있음 (push 여부는 아직 사용자 미결정 — 다음 세션에서 재확인 필요)
+- Firebase Hosting 배포 미완료 (Task 1 순수 함수 추가, 아직 UI 연계 없음)
+- 로컬 main이 origin/main보다 25개 커밋 앞서 있음
 
 ## 방금 수정한 내용 (이번 세션)
 
-### 일일미션 기도문 작성 + 시크릿기프트(1등 표시) 기능
+### Task 1: KST 시간 헬퍼 추가 (2026-07-16)
+- **목표**: 일일미션 제출 가능 시간대(KST 07:00~23:59) 판정 및 이전 날짜 계산 함수 추가
+- **추가 함수** (`script.js` 라인 141-151):
+  - `getKstHour()` → 현재 KST 시각의 시간(0-23) 반환
+  - `isMissionSubmitWindowOpen()` → 현재 시간이 07:00 이상인지 판정 (boolean)
+  - `_getPrevKstDateStr(dateStr)` → 주어진 날짜의 전날을 계산하여 YYYY-MM-DD 형식 반환
+- **패턴**: 기존 `getTodayKstDateStr()` 함수와 동일한 KST 오프셋 방식 (`Date.now() + 9 * 3600 * 1000`)
+- **검증 완료** ✓:
+  - `getKstHour()` → 숫자 0-23 범위 반환
+  - `isMissionSubmitWindowOpen()` → boolean, 현재 KST 시간과 일치
+  - `_getPrevKstDateStr('2026-07-20')` → 정확히 `'2026-07-19'` 반환
+- **상태**: 순수 함수 추가 완료, 아직 UI 연계 없음. Task 2부터 이 함수들을 미션 제출 로직에 활용할 예정.
+
+### 일일미션 기도문 작성 + 시크릿기프트(1등 표시) 기능 (이전 세션)
 - **요청 배경**: 미션 인증사진만 올리던 기존 흐름에 기도문 작성을 필수화하고, 그날 가장 먼저 인증한 사람에게 앱 내에서만 보이는 "시크릿기프트"(실제로는 1,000원 상당의 편의점 상품권 — 금액/내용은 앱에 노출하지 않음) 배지를 부여. 실제 푸시 알림은 Blaze 플랜 업그레이드 전까지 범위 제외.
 - **RTDB 구조 변경**: `missions/{date}/{sessionId}`에 `prayerText` 필드 추가. 형제 키로 `missions/{date}/_firstPlace` = `{sessionId, memberName, timestamp}` 추가. `database.rules.json`은 `$date` 하위 와일드카드 `.write:true`가 이미 커버하므로 규칙 변경 없음.
 - **1등 판정 (race-safe)**: `missionDateRef.child('_firstPlace').transaction(current => current === null ? {...} : undefined)` — RTDB 트랜잭션으로 동시 제출에도 정확히 한 명만 당첨되도록 보장. 실패는 조용히 무시(`.catch(() => {})`), 보너스 기능이라 크리티컬하지 않음.
