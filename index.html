@@ -181,7 +181,10 @@
                 </div>
                 <!-- 사진 업로드 -->
                 <div class="mission-upload-section" id="mission-upload-section">
-                    <input type="text" id="mission-name-input" class="profile-name-input" placeholder="이름을 입력해주세요" maxlength="20" style="margin-bottom:10px">
+                    <div class="mission-name-row">
+                        <input type="text" id="mission-name-input" class="profile-name-input" placeholder="이름을 입력해주세요" maxlength="20">
+                        <button type="button" class="mission-gallery-btn" onclick="document.getElementById('mission-gallery-input').click()">🖼️ 갤러리</button>
+                    </div>
                     <div class="mission-upload-placeholder" id="mission-upload-placeholder" onclick="document.getElementById('mission-file-input').click()">
                         <span style="font-size:2.2rem">📷</span>
                         <span>필사 인증 사진 업로드</span>
@@ -192,6 +195,7 @@
                         <button class="mission-change-btn" onclick="document.getElementById('mission-file-input').click()">📷 사진 변경</button>
                     </div>
                     <input type="file" id="mission-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleMissionPhotoSelect(event)">
+                    <input type="file" id="mission-gallery-input" accept="image/*" style="display:none" onchange="handleMissionPhotoSelect(event)">
                     <textarea id="mission-prayer-input" class="simple-modal-input" rows="3" maxlength="500" placeholder="오늘의 기도문을 적어주세요 🙏" style="margin-top:10px"></textarea>
                     <button class="mission-submit-btn" id="mission-submit-btn" onclick="submitMission()">✅ 인증 제출하기</button>
                 </div>

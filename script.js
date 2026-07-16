@@ -1066,6 +1066,7 @@ function openMissionPopup() {
     // 업로드 상태 초기화
     _missionPhotoData = null;
     document.getElementById('mission-file-input').value = '';
+    document.getElementById('mission-gallery-input').value = '';
     document.getElementById('mission-upload-placeholder').style.display = 'flex';
     document.getElementById('mission-photo-preview').style.display = 'none';
     document.getElementById('mission-done-section').style.display = 'none';
@@ -1240,6 +1241,7 @@ function editMissionSubmission() {
     missionsRef.child(mission.date).child(mySessionId).remove().then(() => {
         _missionPhotoData = null;
         document.getElementById('mission-file-input').value = '';
+        document.getElementById('mission-gallery-input').value = '';
         document.getElementById('mission-upload-placeholder').style.display = 'flex';
         document.getElementById('mission-photo-preview').style.display = 'none';
         document.getElementById('mission-upload-section').style.display = 'block';
