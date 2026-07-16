@@ -125,13 +125,13 @@ const missionsRef = database.ref('missions');
 
 // ── 일일미션 스케줄 (수련회 사전 프로그램 7/20-7/26) ──
 const MISSION_SCHEDULE = [
-    { date:'2026-07-20', day:1, label:'1일차', range:'사도행전 2:14-18', desc:'5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-21', day:2, label:'2일차', range:'사도행전 2:19-23', desc:'5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-22', day:3, label:'3일차', range:'사도행전 2:24-28', desc:'5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-23', day:4, label:'4일차', range:'사도행전 2:29-33', desc:'5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-24', day:5, label:'5일차', range:'사도행전 2:34-38', desc:'5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-25', day:6, label:'6일차', range:'사도행전 2:39-42', desc:'4절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-26', day:7, label:'주일',  range:'사도행전 2:17 암송', desc:'"하나님이 말씀하시기를 말세에 내가 내 영을 모든 육체에 부어 주리니 너희의 자녀들은 예언할 것이요 너희의 젊은이들은 환상을 보고 너희의 늙은이들은 꿈을 꾸리라" — 암송 후 사진이나 영상으로 인증하세요! 🌟' },
+    { date:'2026-07-20', day:1, label:'1일차', range:'사도행전 2:1-8', desc:'8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-21', day:2, label:'2일차', range:'사도행전 2:9-16', desc:'8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-22', day:3, label:'3일차', range:'사도행전 2:17-24', desc:'8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-23', day:4, label:'4일차', range:'사도행전 2:25-32', desc:'8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-24', day:5, label:'5일차', range:'사도행전 2:33-40', desc:'8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-25', day:6, label:'6일차', range:'사도행전 2:41-47', desc:'7절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
+    { date:'2026-07-26', day:7, label:'주일',  range:'사도행전 2:17 암송', desc:'"하나님이 말씀하시기를 말세에 내가 내 영을 모든 육체에 부어 주리니 너희의 자녀들은 예언할 것이요 너희의 젊은이들은 환상을 보고 너희의 늙은이들은 꿈을 꾸리라"', noSubmit:true },
 ];
 
 function getTodayKstDateStr() {
@@ -1049,6 +1049,19 @@ function openMissionPopup() {
     document.getElementById('mission-progress-fill').style.width = `${(mission.day / 7) * 100}%`;
     document.getElementById('mission-scripture-range').textContent = mission.range;
     document.getElementById('mission-scripture-desc').textContent = mission.desc;
+    document.getElementById('mission-scripture-label').textContent = mission.noSubmit ? '오늘의 암송 구절' : '오늘의 필사 구절';
+
+    if (mission.noSubmit) {
+        document.getElementById('mission-gift-banner').style.display = 'none';
+        document.getElementById('mission-time-blocked').style.display = 'none';
+        document.getElementById('mission-upload-section').style.display = 'none';
+        document.getElementById('mission-done-section').style.display = 'none';
+        document.getElementById('mission-members-section').style.display = 'none';
+        if (_missionPopupListener) { _missionPopupListener.ref.off('value', _missionPopupListener.cb); _missionPopupListener = null; }
+        document.getElementById('mission-popup').classList.add('active');
+        return;
+    }
+    document.getElementById('mission-members-section').style.display = '';
 
     // 업로드 상태 초기화
     _missionPhotoData = null;
