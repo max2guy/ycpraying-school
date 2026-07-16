@@ -311,7 +311,7 @@ button,.float-btn,.icon-btn,.amen-btn,.setting-item,.camera-btn,.enter-btn {
 #camp-popup .popup-content { height:80vh; border-radius:var(--r-lg); transform:translateY(16px) scale(0.96); }
 #camp-popup.active .popup-content { transform:translateY(0) scale(1); }
 #settings-modal { align-items:center; }
-#settings-modal .popup-content { max-width:300px; height:78vh; max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; transform:translateY(16px) scale(0.96); }
+#settings-modal .popup-content { max-width:300px; height:auto; max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; transform:translateY(16px) scale(0.96); }
 #settings-modal.active .popup-content { transform:translateY(0) scale(1); }
 #profile-edit-modal { align-items:center; }
 #profile-edit-modal .popup-content { height:auto; max-width:330px; padding:24px; transform:translateY(16px) scale(0.96); }
