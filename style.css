@@ -667,6 +667,7 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-scripture-label { font-size:0.70rem; color:var(--text-dim); margin-bottom:6px; letter-spacing:0.04em; }
 .mission-scripture-range { font-size:1.1rem; font-weight:800; color:var(--rose); margin-bottom:8px; }
 .mission-scripture-desc { font-size:0.82rem; color:var(--text-dim); line-height:1.6; }
+.mission-time-blocked { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:var(--glass); border:1.5px dashed var(--rose-border); border-radius:var(--r-md); padding:28px 16px; text-align:center; color:var(--text-dim); font-size:0.88rem; }
 
 .mission-upload-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:2px dashed var(--rose-border); border-radius:var(--r-md); padding:28px 16px; cursor:pointer; font-size:0.88rem; color:var(--text-dim); transition:background 0.2s; }
 .mission-upload-placeholder:active { background:var(--rose-soft); }
