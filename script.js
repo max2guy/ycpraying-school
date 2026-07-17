@@ -123,6 +123,8 @@ const onlineRef   = database.ref('.info/connected');   // .info/connected는 고
 let presenceRef   = database.ref('presence');
 let messagesRef   = database.ref('messages');
 const missionsRef = database.ref('missions');
+const missionAliasesRef = database.ref('missionAliases');
+const guessWhoParticipantsRef = database.ref('guessWhoParticipants');
 
 // ── 일일미션 스케줄 (수련회 사전 프로그램 7/20-7/26) ──
 const MISSION_SCHEDULE = [
@@ -171,6 +173,15 @@ if (!mySessionId) {
     mySessionId = 'user_' + Date.now();
     localStorage.setItem('mySessionId', mySessionId);
 }
+
+const MISSION_ALIAS_STORAGE_KEY = 'missionAlias';
+const MISSION_ALIASES = [
+    '작은겨자씨', '고요한등불', '푸른감람나무', '새벽이', '평안이', '말씀지킴이', '기쁨의샘', '작은소금',
+    '은혜의길', '포도나무가지', '빛의자녀', '충성된청지기', '시온의노래', '생명의샘', '주의손길', '소망의씨앗',
+    '기다림의별', '감사의향기', '믿음의방패', '사랑의편지', '순례자', '찬양하는새', '생명나무', '평화의비둘기',
+    '새벽기도자', '은혜의이슬', '약속의무지개', '진리의등불', '기쁨의포도송이', '소금과빛'
+];
+let _missionAliasAssignment = null;
 
 // ── 상태 변수 ──
 let isAdmin       = false;
@@ -1043,6 +1054,52 @@ let _missionPopupListener = null;
 let _missionCompletionsCache = {};
 let _missionSubmittedPrayerText = '';
 
+function getMissionAlias() { return localStorage.getItem(MISSION_ALIAS_STORAGE_KEY) || ''; }
+function updateMissionAliasUI(alias) {
+    const input = document.getElementById('mission-name-input');
+    const note = document.getElementById('mission-alias-note');
+    if (!input || !note) return;
+    if (alias) {
+        input.value = alias;
+        input.readOnly = true;
+        note.textContent = `🌿 나의 익명 닉네임: ${alias}`;
+    } else {
+        input.value = '';
+        input.readOnly = false;
+        note.textContent = '이름을 입력하면 나만의 익명 닉네임이 자동으로 정해져요.';
+    }
+}
+function assignMissionAlias() {
+    const existingAlias = getMissionAlias();
+    if (existingAlias) { updateMissionAliasUI(existingAlias); return Promise.resolve(existingAlias); }
+    if (_missionAliasAssignment) return _missionAliasAssignment;
+    const realName = document.getElementById('mission-name-input').value.trim();
+    if (!realName) return Promise.resolve('');
+    if (containsBannedWords(realName)) { alert('부적절한 이름입니다.'); return Promise.resolve(''); }
+
+    const candidates = [...MISSION_ALIASES].sort(() => Math.random() - 0.5);
+    const reserveNext = index => {
+        if (index >= candidates.length) return Promise.reject(new Error('닉네임이 모두 배정되었습니다. 관리자에게 알려주세요.'));
+        const alias = candidates[index];
+        return missionAliasesRef.child(alias).transaction(current => current === null ? mySessionId : undefined)
+            .then(result => {
+                const owner = result.snapshot.val();
+                if (!result.committed && owner !== mySessionId) return reserveNext(index + 1);
+                return guessWhoParticipantsRef.child(mySessionId).set({
+                    realName,
+                    aliasName: alias,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    localStorage.setItem(MISSION_ALIAS_STORAGE_KEY, alias);
+                    updateMissionAliasUI(alias);
+                    return alias;
+                });
+            });
+    };
+    _missionAliasAssignment = reserveNext(0).finally(() => { _missionAliasAssignment = null; });
+    return _missionAliasAssignment;
+}
+
 function openMissionPopup(selectedMission) {
     const currentMission = getTodayMission();
     const mission = selectedMission || currentMission;
@@ -1107,7 +1164,7 @@ function openMissionPopup(selectedMission) {
     submitBtn.disabled = false;
     submitBtn.textContent = '✅ 인증 제출하기';
 
-    document.getElementById('mission-name-input').value = localStorage.getItem('missionMemberName') || '';
+    updateMissionAliasUI(getMissionAlias());
     document.getElementById('mission-prayer-input').value = '';
     _missionSubmittedPrayerText = '';
 
@@ -1187,24 +1244,26 @@ function rotateMissionPhoto(degrees) {
 function submitMission() {
     if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증은 오전 7시부터 자정까지만 제출할 수 있어요.'); return; }
     if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
-    const memberName = document.getElementById('mission-name-input').value.trim();
-    if (!memberName) { alert('✍️ 이름을 입력해주세요!'); return; }
+    const enteredName = document.getElementById('mission-name-input').value.trim();
+    if (!enteredName) { alert('✍️ 처음 한 번만 이름을 입력해주세요!'); return; }
     const prayerText = document.getElementById('mission-prayer-input').value.trim();
     if (!prayerText) { alert('🙏 기도문을 적어주세요!'); return; }
     const mission = getTodayMission();
     if (!mission) return;
     const btn = document.getElementById('mission-submit-btn');
     btn.disabled = true; btn.textContent = '⏳ 제출 중...';
-    localStorage.setItem('missionMemberName', memberName);
     const missionDateRef = missionsRef.child(mission.date);
-    missionDateRef.child(mySessionId).set({
+    assignMissionAlias().then(alias => {
+        if (!alias) throw new Error('익명 닉네임을 만들 수 없습니다.');
+        return missionDateRef.child(mySessionId).set({
         photoData: _missionPhotoData,
         timestamp: Date.now(),
         day: mission.day,
-        memberName: memberName,
-        prayerText: prayerText
-    }).then(() => {
-        ensureMissionMemberNode(memberName, prayerText, mission.date);
+            memberName: alias,
+            aliasName: alias,
+            prayerText: prayerText
+        }).then(() => {
+        ensureMissionMemberNode(alias, prayerText, mission.date);
         _missionSubmittedPrayerText = prayerText;
         _showMissionCompleted(_missionPhotoData, prayerText);
         const showPlainCelebration = () => {
@@ -1213,7 +1272,7 @@ function submitMission() {
             showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000);
         };
         missionDateRef.child('_firstPlace').transaction(current => {
-            if (current === null) return { sessionId: mySessionId, memberName: memberName, timestamp: Date.now() };
+            if (current === null) return { sessionId: mySessionId, memberName: alias, timestamp: Date.now() };
             return undefined;
         }).then(result => {
             const iWonFirstPlace = result.committed && result.snapshot.val() && result.snapshot.val().sessionId === mySessionId;
@@ -1221,9 +1280,10 @@ function submitMission() {
                 _showWinnerCelebration('오늘의 시크릿기프트 1등 당첨! 🎁');
             } else {
                 showPlainCelebration();
-                _attemptRandomWinnerDraw(mission.date, memberName);
+                _attemptRandomWinnerDraw(mission.date, alias);
             }
         }).catch(() => { showPlainCelebration(); });
+        });
     }).catch(err => {
         alert('제출 실패: ' + err.message);
         btn.disabled = false; btn.textContent = '✅ 인증 제출하기';

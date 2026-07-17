@@ -32,6 +32,16 @@
         }
       }
     },
+    "missionAliases": {
+      ".read": true,
+      ".write": true
+    },
+    "guessWhoParticipants": {
+      ".read": false,
+      "$sessionId": {
+        ".write": true
+      }
+    },
     "appConfig": {
       "requiredVersion": {
         ".read": true,
