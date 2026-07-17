@@ -145,3 +145,66 @@ exports.onNewPrayerEvent = functions
         return null;
     });
 
+/* ── Guess Who? 정답 공개 및 서버 채점 ── */
+exports.revealGuessWhoResults = functions
+    .region('asia-northeast3')
+    .https.onCall(async (_data, context) => {
+        if (!context.auth || context.auth.token.email !== 'admin@church.com') {
+            throw new functions.https.HttpsError('permission-denied', '관리자만 정답을 공개할 수 있습니다.');
+        }
+
+        const db = admin.database();
+        const [participantsSnap, answersSnap, candidatesSnap, gameSnap] = await Promise.all([
+            db.ref('guessWhoParticipants').once('value'),
+            db.ref('guessWhoAnswers').once('value'),
+            db.ref('guessWhoCandidates').once('value'),
+            db.ref('guessWhoGame').once('value')
+        ]);
+        if ((gameSnap.val() || {}).status === 'RESULT_REVEALED') {
+            throw new functions.https.HttpsError('failed-precondition', '이미 정답이 공개되었습니다.');
+        }
+
+        const participants = participantsSnap.val() || {};
+        const answers = answersSnap.val() || {};
+        const candidates = candidatesSnap.val() || {};
+        const aliasOwners = Object.entries(participants).reduce((acc, [sessionId, participant]) => {
+            if (participant && participant.aliasName && participant.candidateId) acc[participant.aliasName] = { sessionId, ...participant };
+            return acc;
+        }, {});
+        const allAliases = Object.keys(aliasOwners);
+        const results = {};
+
+        Object.entries(answers).forEach(([playerId, answerData]) => {
+            const player = participants[playerId];
+            if (!player || !answerData || !answerData.submitted) return;
+            const questionAliases = allAliases.filter(alias => alias !== player.aliasName);
+            const items = questionAliases.map(alias => {
+                const selectedId = (answerData.answers || {})[alias] || '';
+                const correctId = aliasOwners[alias].candidateId;
+                return {
+                    aliasName: alias,
+                    selectedName: selectedId === 'unknown' || !selectedId ? '모르겠어요' : ((candidates[selectedId] || {}).name || '미선택'),
+                    correctName: (candidates[correctId] || {}).name || '알 수 없음',
+                    correct: selectedId === correctId
+                };
+            });
+            results[playerId] = { score: items.filter(item => item.correct).length, total: questionAliases.length, items };
+        });
+
+        const leaderboard = Object.entries(results)
+            .map(([playerId, result]) => ({ playerId, name: (participants[playerId] || {}).realName || '참가자', score: result.score }))
+            .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
+        const topScore = leaderboard.length ? leaderboard[0].score : 0;
+        const winners = leaderboard.filter(item => item.score === topScore);
+
+        await Promise.all([
+            db.ref('guessWhoResults').set(results),
+            db.ref('guessWhoGame').set({
+                status: 'RESULT_REVEALED',
+                resultRevealedAt: admin.database.ServerValue.TIMESTAMP,
+                leaderboard,
+                winners
+            })
+        ]);
+        return { winnerCount: winners.length, topScore };
+    });

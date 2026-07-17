@@ -125,6 +125,10 @@ let messagesRef   = database.ref('messages');
 const missionsRef = database.ref('missions');
 const missionAliasesRef = database.ref('missionAliases');
 const guessWhoParticipantsRef = database.ref('guessWhoParticipants');
+const guessWhoCandidatesRef = database.ref('guessWhoCandidates');
+const guessWhoAnswersRef = database.ref('guessWhoAnswers');
+const guessWhoResultsRef = database.ref('guessWhoResults');
+const guessWhoGameRef = database.ref('guessWhoGame');
 
 // ── 일일미션 스케줄 (수련회 사전 프로그램 7/20-7/26) ──
 const MISSION_SCHEDULE = [
@@ -175,6 +179,10 @@ if (!mySessionId) {
 }
 
 const MISSION_ALIAS_STORAGE_KEY = 'missionAlias';
+const GUESS_WHO_CANDIDATE_STORAGE_KEY = 'guessWhoCandidateId';
+const GUESS_WHO_DRAFT_STORAGE_KEY = 'guessWhoDraft';
+const GUESS_WHO_SUBMITTED_STORAGE_KEY = 'guessWhoSubmitted';
+const GUESS_WHO_OPEN_AT = 1785078000000;
 const MISSION_ALIASES = [
     '작은겨자씨', '고요한등불', '푸른감람나무', '새벽이', '평안이', '말씀지킴이', '기쁨의샘', '작은소금',
     '은혜의길', '포도나무가지', '빛의자녀', '충성된청지기', '시온의노래', '생명의샘', '주의손길', '소망의씨앗',
@@ -1085,11 +1093,17 @@ function assignMissionAlias() {
             .then(result => {
                 const owner = result.snapshot.val();
                 if (!result.committed && owner !== mySessionId) return reserveNext(index + 1);
-                return guessWhoParticipantsRef.child(mySessionId).set({
-                    realName,
-                    aliasName: alias,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                }).then(() => {
+                const candidateId = localStorage.getItem(GUESS_WHO_CANDIDATE_STORAGE_KEY) || `candidate_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                return Promise.all([
+                    guessWhoCandidatesRef.child(candidateId).set({ name: realName }),
+                    guessWhoParticipantsRef.child(mySessionId).set({
+                        realName,
+                        aliasName: alias,
+                        candidateId,
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    })
+                ]).then(() => {
+                    localStorage.setItem(GUESS_WHO_CANDIDATE_STORAGE_KEY, candidateId);
                     localStorage.setItem(MISSION_ALIAS_STORAGE_KEY, alias);
                     updateMissionAliasUI(alias);
                     return alias;
@@ -1099,6 +1113,156 @@ function assignMissionAlias() {
     _missionAliasAssignment = reserveNext(0).finally(() => { _missionAliasAssignment = null; });
     return _missionAliasAssignment;
 }
+
+let _guessWhoState = { aliases: [], candidates: [], answers: {} };
+function isGuessWhoOpen() { return Date.now() >= GUESS_WHO_OPEN_AT; }
+function getGuessWhoDraft() {
+    try { return JSON.parse(localStorage.getItem(GUESS_WHO_DRAFT_STORAGE_KEY)) || {}; } catch (_) { return {}; }
+}
+function initGuessWhoGame() {
+    if (!isGuessWhoOpen()) return;
+    const btn = document.getElementById('guess-who-btn');
+    if (btn) btn.style.display = 'block';
+    if (!sessionStorage.getItem('guessWhoOpened')) {
+        sessionStorage.setItem('guessWhoOpened', 'true');
+        setTimeout(openGuessWhoGame, 1200);
+    }
+}
+function closeGuessWhoGame() { document.getElementById('guess-who-popup').classList.remove('active'); }
+async function openGuessWhoGame() {
+    if (!isGuessWhoOpen()) return;
+    document.getElementById('guess-who-popup').classList.add('active');
+    hideGuessWhoSections();
+    const game = (await guessWhoGameRef.once('value')).val() || {};
+    if (game.status === 'RESULT_REVEALED') return loadGuessWhoResults(game);
+    if (localStorage.getItem(GUESS_WHO_SUBMITTED_STORAGE_KEY) === 'true') return showGuessWhoWaiting();
+    document.getElementById('guess-who-intro').style.display = '';
+    renderGuessWhoAdmin();
+}
+function hideGuessWhoSections() {
+    ['guess-who-intro','guess-who-board','guess-who-review','guess-who-waiting','guess-who-results'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
+}
+function buildGuessWhoAliases(missions) {
+    const aliases = new Map();
+    MISSION_SCHEDULE.filter(m => !m.noSubmit).forEach(mission => {
+        const dayData = missions[mission.date] || {};
+        Object.entries(dayData).forEach(([sessionId, data]) => {
+            if (sessionId.startsWith('_') || !data) return;
+            const alias = data.aliasName || data.memberName;
+            if (!alias) return;
+            if (!aliases.has(alias)) aliases.set(alias, { alias, records: [], firstCount: 0 });
+            const item = aliases.get(alias);
+            item.records.push({ day: mission.day, timestamp: data.timestamp || 0, photoData: data.photoData || '' });
+            if (dayData._firstPlace && dayData._firstPlace.memberName === alias) item.firstCount++;
+        });
+    });
+    return [...aliases.values()].map(item => ({
+        ...item,
+        records: item.records.sort((a, b) => a.day - b.day),
+        averageTime: item.records.length ? Math.round(item.records.reduce((sum, r) => sum + new Date(r.timestamp).getHours() * 60 + new Date(r.timestamp).getMinutes(), 0) / item.records.length) : 0
+    }));
+}
+async function startGuessWhoGame() {
+    const myAlias = getMissionAlias();
+    const myCandidateId = localStorage.getItem(GUESS_WHO_CANDIDATE_STORAGE_KEY);
+    if (!myAlias || !myCandidateId) { alert('미션 인증에 참여한 뒤 게임을 시작할 수 있어요.'); return; }
+    const [missionsSnap, candidatesSnap] = await Promise.all([missionsRef.once('value'), guessWhoCandidatesRef.once('value')]);
+    const aliases = buildGuessWhoAliases(missionsSnap.val() || {}).filter(item => item.alias !== myAlias);
+    const candidates = Object.entries(candidatesSnap.val() || {})
+        .filter(([id, data]) => id !== myCandidateId && data && data.name)
+        .map(([id, data]) => ({ id, name: data.name }));
+    if (!aliases.length || !candidates.length) { alert('게임에 필요한 참가자 정보가 아직 충분하지 않아요.'); return; }
+    _guessWhoState = { aliases, candidates, answers: getGuessWhoDraft() };
+    showGuessWhoBoard();
+}
+function formatGuessWhoTime(minutes) {
+    const hour = Math.floor(minutes / 60), minute = minutes % 60;
+    return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}:${String(minute).padStart(2, '0')}`;
+}
+function showGuessWhoBoard() {
+    hideGuessWhoSections();
+    document.getElementById('guess-who-board').style.display = '';
+    renderGuessWhoCards();
+    renderGuessWhoAdmin();
+}
+function renderGuessWhoCards() {
+    const { aliases, candidates, answers } = _guessWhoState;
+    const selectedCount = Object.values(answers).filter(value => value).length;
+    document.getElementById('guess-who-progress').textContent = `현재 선택 ${selectedCount} / ${aliases.length}명`;
+    const selectedIds = new Set(Object.values(answers).filter(value => value && value !== 'unknown'));
+    const cards = document.getElementById('guess-who-cards');
+    cards.innerHTML = aliases.map(item => {
+        const value = answers[item.alias] || '';
+        const options = [`<option value="">사람을 선택하세요</option>`, `<option value="unknown"${value === 'unknown' ? ' selected' : ''}>모르겠어요</option>`]
+            .concat(candidates.map(candidate => `<option value="${escHtml(candidate.id)}"${value === candidate.id ? ' selected' : ''}${selectedIds.has(candidate.id) && value !== candidate.id ? ' disabled' : ''}>${escHtml(candidate.name)}</option>`));
+        return `<article class="guess-card"><h4>🌱 ${escHtml(item.alias)}</h4><div class="guess-hints">${item.records.length}일 인증 · 평균 ${formatGuessWhoTime(item.averageTime)} · 첫 인증 ${item.firstCount}회</div><select class="guess-select" data-alias="${escHtml(item.alias)}">${options.join('')}</select><button class="guess-history-btn" data-history="${escHtml(item.alias)}">지난 인증 기록 보기</button></article>`;
+    }).join('');
+    cards.querySelectorAll('.guess-select').forEach(select => select.addEventListener('change', () => {
+        _guessWhoState.answers[select.dataset.alias] = select.value;
+        localStorage.setItem(GUESS_WHO_DRAFT_STORAGE_KEY, JSON.stringify(_guessWhoState.answers));
+        document.getElementById('guess-who-save-status').textContent = '✓ 답안이 자동 저장되었습니다.';
+        renderGuessWhoCards();
+    }));
+    cards.querySelectorAll('.guess-history-btn').forEach(button => button.addEventListener('click', () => showGuessWhoHistory(button.dataset.history)));
+}
+function showGuessWhoHistory(alias) {
+    const item = _guessWhoState.aliases.find(entry => entry.alias === alias);
+    const panel = document.getElementById('guess-who-history');
+    if (!item) return;
+    panel.style.display = '';
+    panel.innerHTML = `<strong>${escHtml(alias)}의 인증 기록</strong><br>${item.records.map(record => `${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}${record.photoData ? ' · 사진 인증' : ''}`).join('<br>')}`;
+}
+function openGuessWhoReview() {
+    hideGuessWhoSections();
+    document.getElementById('guess-who-review').style.display = '';
+    const names = Object.fromEntries(_guessWhoState.candidates.map(candidate => [candidate.id, candidate.name]));
+    document.getElementById('guess-who-review-list').innerHTML = _guessWhoState.aliases.map(item => `<div class="guess-review-item"><b>${escHtml(item.alias)}</b> → ${escHtml(names[_guessWhoState.answers[item.alias]] || (_guessWhoState.answers[item.alias] === 'unknown' ? '모르겠어요' : '미선택'))}</div>`).join('');
+    renderGuessWhoAdmin();
+}
+function submitGuessWhoAnswers() {
+    const selected = Object.values(_guessWhoState.answers).filter(Boolean).length;
+    const unselected = _guessWhoState.aliases.length - selected;
+    if (!confirm(`${unselected ? `아직 ${unselected}명을 선택하지 않았어요.\n` : ''}최종 제출 후에는 답을 변경할 수 없습니다.\n제출할까요?`)) return;
+    guessWhoAnswersRef.child(mySessionId).set({
+        answers: _guessWhoState.answers,
+        submitted: true,
+        submittedAt: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+        localStorage.setItem(GUESS_WHO_SUBMITTED_STORAGE_KEY, 'true');
+        showGuessWhoWaiting();
+    }).catch(() => alert('이미 제출했거나 제출에 실패했습니다.'));
+}
+function showGuessWhoWaiting() {
+    hideGuessWhoSections();
+    const panel = document.getElementById('guess-who-waiting');
+    panel.style.display = '';
+    panel.innerHTML = '<b>답안 제출이 완료되었습니다! 🎉</b><br>정답과 점수는 관리자가 함께 공개할 때까지 비공개입니다.';
+    renderGuessWhoAdmin();
+}
+async function loadGuessWhoResults(game) {
+    hideGuessWhoSections();
+    const result = (await guessWhoResultsRef.child(mySessionId).once('value')).val();
+    const panel = document.getElementById('guess-who-results');
+    panel.style.display = '';
+    if (!result) panel.innerHTML = '<div class="guess-who-empty">제출한 답안이 없어요.</div>';
+    else panel.innerHTML = `<div class="guess-result-score">나의 최종 점수<b>${result.score}점</b>${result.total}명 중 ${result.score}명 정답</div>${result.items.map(item => `<div class="guess-result-item${item.correct ? ' correct' : ''}"><b>${escHtml(item.aliasName)}</b><br>내 선택: ${escHtml(item.selectedName)} · 정답: ${escHtml(item.correctName)}<br>${item.correct ? '정답 ✓' : '오답'}</div>`).join('')}`;
+    if (game.winners && game.winners.length) panel.innerHTML += `<div class="guess-history"><strong>공동 우승자</strong><br>${game.winners.map(winner => `${escHtml(winner.name)} · ${winner.score}점`).join('<br>')}</div>`;
+    renderGuessWhoAdmin();
+}
+function renderGuessWhoAdmin() {
+    const panel = document.getElementById('guess-who-admin');
+    panel.style.display = isAdmin ? '' : 'none';
+    if (isAdmin) panel.innerHTML = `<div class="guess-admin-box"><b>🔒 관리자</b><p>제출이 끝난 뒤 정답과 결과를 공개하세요.</p><button class="guess-secondary-btn" onclick="revealGuessWhoResults()">정답 및 결과 공개</button></div>`;
+}
+function revealGuessWhoResults() {
+    if (!isAdmin || !confirm('정답을 공개하면 결과를 다시 비공개로 바꿀 수 없습니다.\n공개할까요?')) return;
+    firebase.app().functions('asia-northeast3').httpsCallable('revealGuessWhoResults')({})
+        .then(() => openGuessWhoGame())
+        .catch(error => alert('정답 공개 실패: ' + (error.message || '관리자 권한을 확인해주세요.')));
+}
+setTimeout(initGuessWhoGame, 1000);
 
 function openMissionPopup(selectedMission) {
     const currentMission = getTodayMission();

@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
-    <link rel="stylesheet" href="style.css?v=87">
+    <link rel="stylesheet" href="style.css?v=88">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
@@ -19,8 +19,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js" defer></script>
-    <script src="script.js?v=114" defer></script>
+    <script src="script.js?v=115" defer></script>
 </head>
 <body id="body">
 
@@ -47,6 +48,7 @@
     <!-- 상단 UI -->
     <button class="camp-btn top-ui-common" onclick="event.stopPropagation(); toggleCampPopup()" aria-label="2026 빔 캠프 정보 보기">🏕️ 2026 빔 캠프</button>
     <button id="mission-btn" class="mission-btn top-ui-common" onclick="event.stopPropagation(); openMissionPopup()" aria-label="일일미션 인증" style="display:none">📖 일일미션</button>
+    <button id="guess-who-btn" class="guess-who-btn top-ui-common" onclick="event.stopPropagation(); openGuessWhoGame()" aria-label="Guess Who 게임 열기" style="display:none">🕵️ Guess Who?</button>
     <div class="online-counter top-ui-common" onclick="handleOnlineCounterClick()" role="status" aria-label="현재 접속자 수">
         <div class="online-dot"></div>
         <span id="online-count">접속 중...</span>
@@ -391,6 +393,49 @@
             <div class="simple-modal-btns">
                 <button class="simple-modal-cancel"  onclick="cancelConfirmDialog()">취소</button>
                 <button class="simple-modal-confirm" onclick="okConfirmDialog()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guess Who? 보너스 게임 -->
+    <div id="guess-who-popup" class="popup-overlay" onclick="closeGuessWhoGame()">
+        <div class="popup-content guess-who-content" onclick="event.stopPropagation()">
+            <div class="sheet-handle"></div>
+            <div class="popup-header">
+                <h2>🕵️ Guess Who?</h2>
+                <button class="close-btn" onclick="closeGuessWhoGame()" aria-label="닫기">&times;</button>
+            </div>
+            <div class="guess-who-scroll">
+                <section id="guess-who-intro" class="guess-who-intro">
+                    <div class="guess-who-orbit">✦</div>
+                    <div class="guess-who-title">Guess Who?</div>
+                    <h3>익명의 말씀 친구를 찾아라</h3>
+                    <p>7일 동안 함께 미션에 참여한<br>익명의 말씀 친구들은 누구였을까요?</p>
+                    <ul>
+                        <li>내 익명 이름은 문제에서 제외돼요.</li>
+                        <li>한 사람은 한 번만 선택할 수 있어요.</li>
+                        <li>최종 제출 후에는 답을 바꿀 수 없어요.</li>
+                    </ul>
+                    <button class="guess-primary-btn" onclick="startGuessWhoGame()">게임 시작하기</button>
+                </section>
+                <section id="guess-who-board" style="display:none">
+                    <div id="guess-who-save-status" class="guess-save-status">답안이 자동 저장됩니다.</div>
+                    <div id="guess-who-progress" class="guess-progress"></div>
+                    <div id="guess-who-cards" class="guess-who-cards"></div>
+                    <div id="guess-who-history" class="guess-history" style="display:none"></div>
+                    <button class="guess-primary-btn" onclick="openGuessWhoReview()">답안 검토하기</button>
+                </section>
+                <section id="guess-who-review" style="display:none">
+                    <h3 class="guess-section-title">최종 답안을 확인해 주세요</h3>
+                    <div id="guess-who-review-list" class="guess-review-list"></div>
+                    <div class="guess-review-actions">
+                        <button class="guess-secondary-btn" onclick="showGuessWhoBoard()">다시 수정하기</button>
+                        <button class="guess-primary-btn" onclick="submitGuessWhoAnswers()">최종 제출하기</button>
+                    </div>
+                </section>
+                <section id="guess-who-waiting" class="guess-who-empty" style="display:none"></section>
+                <section id="guess-who-results" style="display:none"></section>
+                <section id="guess-who-admin" style="display:none"></section>
             </div>
         </div>
     </div>
