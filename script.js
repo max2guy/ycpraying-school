@@ -1115,7 +1115,8 @@ function assignMissionAlias() {
 }
 
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
-function isGuessWhoOpen() { return Date.now() >= GUESS_WHO_OPEN_AT; }
+function isGuessWhoTestMode() { return new URLSearchParams(location.search).get('guessWhoTest') === '1'; }
+function isGuessWhoOpen() { return isGuessWhoTestMode() || Date.now() >= GUESS_WHO_OPEN_AT; }
 function getGuessWhoDraft() {
     try { return JSON.parse(localStorage.getItem(GUESS_WHO_DRAFT_STORAGE_KEY)) || {}; } catch (_) { return {}; }
 }
@@ -1133,6 +1134,10 @@ async function openGuessWhoGame() {
     if (!isGuessWhoOpen()) return;
     document.getElementById('guess-who-popup').classList.add('active');
     hideGuessWhoSections();
+    if (isGuessWhoTestMode()) {
+        document.getElementById('guess-who-intro').style.display = '';
+        return;
+    }
     const game = (await guessWhoGameRef.once('value')).val() || {};
     if (game.status === 'RESULT_REVEALED') return loadGuessWhoResults(game);
     if (localStorage.getItem(GUESS_WHO_SUBMITTED_STORAGE_KEY) === 'true') return showGuessWhoWaiting();
@@ -1165,6 +1170,19 @@ function buildGuessWhoAliases(missions) {
     }));
 }
 async function startGuessWhoGame() {
+    if (isGuessWhoTestMode()) {
+        _guessWhoState = {
+            aliases: [
+                { alias: '작은겨자씨', records: [{ day:1, timestamp:Date.now() }], firstCount: 2, averageTime: 426 },
+                { alias: '고요한등불', records: [{ day:1, timestamp:Date.now() }], firstCount: 1, averageTime: 452 },
+                { alias: '푸른감람나무', records: [{ day:1, timestamp:Date.now() }], firstCount: 0, averageTime: 501 }
+            ],
+            candidates: [{ id:'demo_1', name:'김민수' }, { id:'demo_2', name:'박지훈' }, { id:'demo_3', name:'이서연' }],
+            answers: {}
+        };
+        showGuessWhoBoard();
+        return;
+    }
     const myAlias = getMissionAlias();
     const myCandidateId = localStorage.getItem(GUESS_WHO_CANDIDATE_STORAGE_KEY);
     if (!myAlias || !myCandidateId) { alert('미션 인증에 참여한 뒤 게임을 시작할 수 있어요.'); return; }
@@ -1201,7 +1219,7 @@ function renderGuessWhoCards() {
     }).join('');
     cards.querySelectorAll('.guess-select').forEach(select => select.addEventListener('change', () => {
         _guessWhoState.answers[select.dataset.alias] = select.value;
-        localStorage.setItem(GUESS_WHO_DRAFT_STORAGE_KEY, JSON.stringify(_guessWhoState.answers));
+        if (!isGuessWhoTestMode()) localStorage.setItem(GUESS_WHO_DRAFT_STORAGE_KEY, JSON.stringify(_guessWhoState.answers));
         document.getElementById('guess-who-save-status').textContent = '✓ 답안이 자동 저장되었습니다.';
         renderGuessWhoCards();
     }));
@@ -1225,6 +1243,7 @@ function submitGuessWhoAnswers() {
     const selected = Object.values(_guessWhoState.answers).filter(Boolean).length;
     const unselected = _guessWhoState.aliases.length - selected;
     if (!confirm(`${unselected ? `아직 ${unselected}명을 선택하지 않았어요.\n` : ''}최종 제출 후에는 답을 변경할 수 없습니다.\n제출할까요?`)) return;
+    if (isGuessWhoTestMode()) { showGuessWhoWaiting(); return; }
     guessWhoAnswersRef.child(mySessionId).set({
         answers: _guessWhoState.answers,
         submitted: true,
