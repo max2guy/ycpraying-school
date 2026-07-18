@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.0 — 중고등부 전용 (S1 기반)
+// v1.4.1 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -276,7 +276,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.0';
+const CURRENT_VERSION = '1.4.1';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -430,9 +430,14 @@ async function registerFCMToken() {
     try {
         setNotifUI('loading');
         const msg = firebase.messaging();
-        const reg = await navigator.serviceWorker.ready;
+        const reg = await waitForNotificationRegistration(navigator.serviceWorker.ready, 10000, '서비스 워커 준비 시간이 초과됐습니다.');
+        await reg.update().catch(() => {});
         console.log('[FCM] SW 준비됨:', reg.active?.scriptURL);
-        const token = await msg.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+        const token = await waitForNotificationRegistration(
+            msg.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg }),
+            15000,
+            '알림 등록 시간이 초과됐습니다.'
+        );
         if (token) {
             await database.ref('fcmTokens').child(mySessionId).set({ token, updatedAt: Date.now() });
             localStorage.setItem('notificationEnabled', 'true');
@@ -446,7 +451,16 @@ async function registerFCMToken() {
     } catch (e) {
         console.error('[FCM] 토큰 등록 실패:', e);
         setNotifUI('error');
+        if (e.message?.includes('초과')) document.getElementById('notif-status-label').textContent = '등록 시간이 초과됐어요. 앱을 다시 열어 재시도해 주세요.';
     }
+}
+
+function waitForNotificationRegistration(promise, timeoutMs, message) {
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 /* ── 알림 켜기 (사용자 클릭 이벤트 내에서 권한 요청) ── */
@@ -539,7 +553,7 @@ async function getMyIp() {
 // ── 접속자 현황 ──
 // 세션ID 고정 경로: 1세션 = 1레코드 보장
 let myPresenceRef = presenceRef.child(mySessionId);
-console.log('[ycpraying-school v1.4.0] membersRef:', membersRef.toString());
+console.log('[ycpraying-school v1.4.1] membersRef:', membersRef.toString());
 const PRESENCE_TTL = 5 * 60 * 1000; // 5분 이상 heartbeat 없으면 stale
 
 function registerPresenceListeners() {
