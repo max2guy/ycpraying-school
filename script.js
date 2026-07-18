@@ -1115,7 +1115,8 @@ function assignMissionAlias() {
 
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
 const GUESS_WHO_OPENING_STORAGE_KEY = 'guessWhoOpeningSeen';
-function isGuessWhoTestMode() { return new URLSearchParams(location.search).get('guessWhoTest') === '1'; }
+// 테스트 기간에는 미션 인증 여부와 관계없이 데모 게임을 바로 진행합니다.
+function isGuessWhoTestMode() { return true; }
 // 테스트 기간에는 실제 게임도 날짜와 관계없이 바로 열어 둡니다.
 function isGuessWhoOpen() { return true; }
 function getGuessWhoDraft() {
