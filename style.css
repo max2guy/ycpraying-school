@@ -552,6 +552,16 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .install-dismiss { background:transparent; border:none; font-size:1.8rem; color:var(--text-dim); cursor:pointer; padding:0 4px; line-height:1; }
 @media(max-width:768px){.install-banner.show{bottom:calc(20px + env(safe-area-inset-bottom))}}
 
+.notification-onboarding { position:fixed; inset:0; z-index:10001; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(56,29,73,.36); backdrop-filter:blur(5px); }
+.notification-onboarding-card { width:min(100%,340px); padding:28px 24px 22px; text-align:center; border:1.5px solid var(--rose-border); border-radius:var(--r-lg); background:var(--glass); box-shadow:var(--shadow-lg); }
+.notification-onboarding-icon { display:block; margin-bottom:12px; color:var(--rose); font-size:2.4rem; }
+.notification-onboarding-card h2 { margin:0; color:var(--text); font-size:1.3rem; }
+.notification-onboarding-card p { margin:10px 0 22px; color:var(--text-muted); font-size:.9rem; line-height:1.55; }
+.notification-onboarding-actions { display:flex; gap:10px; }
+.notification-onboarding-actions button { flex:1; min-height:42px; border-radius:12px; font-weight:800; cursor:pointer; }
+.notification-onboarding-later { border:1.5px solid var(--rose-border); background:var(--rose-soft); color:var(--rose-dim); }
+.notification-onboarding-enable { border:0; background:var(--rose); color:#fff; }
+
 /* ── D3 GRAPH ── */
 .links {
   /* 입장하기 후 라인 서서히 표시 */

@@ -59,6 +59,10 @@ document.getElementById('btn-install-app').addEventListener('click', () => {
 document.getElementById('btn-close-install').addEventListener('click', () => {
     if (installBanner) installBanner.classList.remove('show');
 });
+window.addEventListener('appinstalled', () => {
+    localStorage.removeItem('notificationOnboardingDismissed');
+    setTimeout(showNotificationOnboarding, 500);
+});
 
 // ── UI 핸들러 ──
 let isFabOpen = false;
@@ -320,6 +324,25 @@ function sendBroadcastUpdate() {
 }
 
 let _fcmMsgInitialized = false;
+const NOTIFICATION_ONBOARDING_DISMISSED_KEY = 'notificationOnboardingDismissed';
+
+function isInstalledApp() {
+    return window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
+}
+function showNotificationOnboarding() {
+    if (!isInstalledApp() || !('Notification' in window) || Notification.permission !== 'default') return;
+    if (localStorage.getItem(NOTIFICATION_ONBOARDING_DISMISSED_KEY)) return;
+    document.getElementById('notification-onboarding').style.display = 'flex';
+}
+function dismissNotificationOnboarding() {
+    localStorage.setItem(NOTIFICATION_ONBOARDING_DISMISSED_KEY, 'true');
+    document.getElementById('notification-onboarding').style.display = 'none';
+}
+async function enableNotificationsFromOnboarding() {
+    await requestNotificationPermission();
+    dismissNotificationOnboarding();
+}
+window.addEventListener('load', () => setTimeout(showNotificationOnboarding, 700));
 
 /* ── 앱 내부 알림 활성 플래그 (localStorage) ── */
 function isNotifEnabled() {

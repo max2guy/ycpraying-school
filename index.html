@@ -21,7 +21,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js" defer></script>
-    <script src="script.js?v=126" defer></script>
+    <script src="script.js?v=127" defer></script>
 </head>
 <body id="body">
 
@@ -71,6 +71,18 @@
     </div>
     <div id="weather-toast" class="system-toast" role="status">
         <span id="weather-text">날씨 정보를 불러오는 중...</span>
+    </div>
+
+    <div id="notification-onboarding" class="notification-onboarding" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notification-onboarding-title">
+        <div class="notification-onboarding-card">
+            <span class="material-symbols-rounded notification-onboarding-icon" aria-hidden="true">notifications_active</span>
+            <h2 id="notification-onboarding-title">미션 알림을 켤까요?</h2>
+            <p>인증을 놓치지 않도록 미인증 알림과 당첨 소식을 보내드려요.</p>
+            <div class="notification-onboarding-actions">
+                <button type="button" class="notification-onboarding-later" onclick="dismissNotificationOnboarding()">나중에</button>
+                <button type="button" class="notification-onboarding-enable" onclick="enableNotificationsFromOnboarding()">알림 켜기</button>
+            </div>
+        </div>
     </div>
 
     <!-- FAB 메뉴 -->
