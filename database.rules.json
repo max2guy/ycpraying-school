@@ -20,6 +20,12 @@
       ".read": false,
       ".write": true
     },
+    "notificationDiagnostics": {
+      ".read": false,
+      "$sessionId": {
+        ".write": true
+      }
+    },
     "prayerEvents": {
       ".read": false,
       ".write": true
@@ -69,6 +75,6 @@
         ".read": false,
         ".write": "auth != null"
       }
-    },
+    }
   }
 }

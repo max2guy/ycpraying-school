@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.1 — 중고등부 전용 (S1 기반)
+// v1.4.2 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -276,7 +276,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.1';
+const CURRENT_VERSION = '1.4.2';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -440,19 +440,31 @@ async function registerFCMToken() {
         );
         if (token) {
             await database.ref('fcmTokens').child(mySessionId).set({ token, updatedAt: Date.now() });
+            recordNotificationDiagnostic('registered');
             localStorage.setItem('notificationEnabled', 'true');
             console.log('[FCM] 토큰 등록 완료 | sessionId:', mySessionId, '| token:', token.slice(0,20) + '...');
             setNotifUI('on');
             _initFCMForeground();
         } else {
             console.error('[FCM] 토큰 발급 실패 (빈 토큰)');
+            recordNotificationDiagnostic('empty_token');
             setNotifUI('error');
         }
     } catch (e) {
         console.error('[FCM] 토큰 등록 실패:', e);
+        recordNotificationDiagnostic('error', e.code || e.message);
         setNotifUI('error');
         if (e.message?.includes('초과')) document.getElementById('notif-status-label').textContent = '등록 시간이 초과됐어요. 앱을 다시 열어 재시도해 주세요.';
     }
+}
+
+function recordNotificationDiagnostic(status, detail = '') {
+    database.ref(`notificationDiagnostics/${mySessionId}`).set({
+        status,
+        detail: String(detail).slice(0, 160),
+        userAgent: navigator.userAgent.slice(0, 160),
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+    }).catch(() => {});
 }
 
 function waitForNotificationRegistration(promise, timeoutMs, message) {
@@ -553,7 +565,7 @@ async function getMyIp() {
 // ── 접속자 현황 ──
 // 세션ID 고정 경로: 1세션 = 1레코드 보장
 let myPresenceRef = presenceRef.child(mySessionId);
-console.log('[ycpraying-school v1.4.1] membersRef:', membersRef.toString());
+console.log('[ycpraying-school v1.4.2] membersRef:', membersRef.toString());
 const PRESENCE_TTL = 5 * 60 * 1000; // 5분 이상 heartbeat 없으면 stale
 
 function registerPresenceListeners() {
