@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin     = require('firebase-admin');
 const { summarizePushResponse } = require('./push-result');
+const { getIncompleteMissionTokens, isMissionReminderDate } = require('./mission-reminder');
 admin.initializeApp();
 
 const APP_URL = 'https://ycpraying-school.web.app/';
@@ -61,6 +62,14 @@ async function sendPush(tokenDatas, title, body, extraData = {}) {
         }
     });
     if (removes.length) await Promise.all(removes);
+}
+
+function getKstDateString() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    const value = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+    return `${value.year}-${value.month}-${value.day}`;
 }
 
 /* ── 1. 새 기도 멤버 추가 ── */
@@ -142,6 +151,31 @@ exports.onNewPrayerEvent = functions
 
         // 처리 후 이벤트 삭제 (중복 알림 방지)
         await snap.ref.remove();
+        return null;
+    });
+
+/* ── 5. 미인증자 리마인더: 매일 밤 9시(KST), 이미 인증한 사용자 제외 ── */
+exports.remindIncompleteMission = functions
+    .region('asia-northeast3')
+    .pubsub.schedule('0 21 * * *')
+    .timeZone('Asia/Seoul')
+    .onRun(async () => {
+        const date = getKstDateString();
+        if (!isMissionReminderDate(date)) {
+            console.log('[FCM] mission_reminder skipped', { date });
+            return null;
+        }
+        const [tokenDatas, missionSnap] = await Promise.all([
+            getAllTokens(null),
+            admin.database().ref(`missions/${date}`).once('value')
+        ]);
+        const pendingTokens = getIncompleteMissionTokens(tokenDatas, missionSnap.val() || {});
+        await sendPush(
+            pendingTokens,
+            '📖 오늘 미션 인증을 잊지 마세요',
+            '지금 인증하면 오늘의 시크릿기프트에도 참여할 수 있어요!',
+            { type: 'mission_reminder' }
+        );
         return null;
     });
 
