@@ -1188,7 +1188,7 @@ function buildGuessWhoAliases(missions) {
             if (!alias) return;
             if (!aliases.has(alias)) aliases.set(alias, { alias, records: [], firstCount: 0 });
             const item = aliases.get(alias);
-            item.records.push({ day: mission.day, timestamp: data.timestamp || 0, photoData: data.photoData || '' });
+            item.records.push({ day: mission.day, timestamp: data.timestamp || 0, photoData: data.photoData || '', prayerText: data.prayerText || '' });
             if (dayData._firstPlace && dayData._firstPlace.memberName === alias) item.firstCount++;
         });
     });
@@ -1245,7 +1245,7 @@ function renderGuessWhoCards() {
         const options = [`<option value="">사람을 선택하세요</option>`, `<option value="unknown"${value === 'unknown' ? ' selected' : ''}>모르겠어요</option>`]
             .concat(candidates.map(candidate => `<option value="${escHtml(candidate.id)}"${value === candidate.id ? ' selected' : ''}${selectedIds.has(candidate.id) && value !== candidate.id ? ' disabled' : ''}>${escHtml(candidate.name)}</option>`));
         const history = _guessWhoHistoryAlias === item.alias
-            ? `<div class="guess-inline-history"><strong>${escHtml(item.alias)}의 인증 기록</strong><br>${item.records.map(record => `${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}${record.photoData ? ' · 사진 인증' : ''}`).join('<br>')}</div>`
+            ? `<div class="guess-inline-history"><strong>${escHtml(item.alias)}의 인증 기록</strong>${item.records.map(record => `<div class="guess-history-record"><div>${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}</div>${record.photoData ? `<button class="guess-history-photo" data-photo="${escHtml(record.photoData)}" data-prayer="${escHtml(record.prayerText || '')}"><img src="${escHtml(record.photoData)}" alt="${record.day}일차 인증 사진"></button>` : '<div class="guess-history-no-photo">인증 사진 없음</div>'}<p>🙏 ${escHtml(record.prayerText || '작성한 기도문이 없습니다.')}</p></div>`).join('')}</div>`
             : '';
         return `<article class="guess-card"><h4>🌱 ${escHtml(item.alias)}</h4><div class="guess-hints">${item.records.length}일 인증 · 평균 ${formatGuessWhoTime(item.averageTime)} · 첫 인증 ${item.firstCount}회</div><select class="guess-select" data-alias="${escHtml(item.alias)}">${options.join('')}</select><button class="guess-history-btn" data-history="${escHtml(item.alias)}">지난 인증 기록 보기</button>${history}</article>`;
     }).join('');
@@ -1256,6 +1256,7 @@ function renderGuessWhoCards() {
         renderGuessWhoCards();
     }));
     cards.querySelectorAll('.guess-history-btn').forEach(button => button.addEventListener('click', () => showGuessWhoHistory(button.dataset.history)));
+    cards.querySelectorAll('.guess-history-photo').forEach(button => button.addEventListener('click', () => openLightbox(button.dataset.photo, button.dataset.prayer)));
 }
 function showGuessWhoHistory(alias) {
     _guessWhoHistoryAlias = _guessWhoHistoryAlias === alias ? '' : alias;
