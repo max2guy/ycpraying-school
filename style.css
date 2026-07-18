@@ -712,6 +712,8 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .guess-hints { color:#8B6DA9; font-size:0.76rem; line-height:1.65; }
 .guess-select { width:100%; margin-top:10px; padding:10px; border:1.5px solid #C5A2E8; border-radius:var(--r-sm); background:#fff; color:var(--text); font-weight:700; }
 .guess-history-btn { margin-top:8px; border:none; background:none; color:#8057B2; font-size:0.74rem; font-weight:700; cursor:pointer; }
+.guess-inline-history { margin-top:10px; padding:10px; border-radius:var(--r-sm); background:#F4EBFF; color:#72528E; font-size:0.74rem; line-height:1.7; }
+.guess-inline-history strong { color:#5B3285; }
 .guess-history { margin:0 0 12px; padding:12px; border:1px solid rgba(255,255,255,0.32); border-radius:var(--r-md); background:rgba(36,15,74,0.5); color:#FBF5FF; font-size:0.78rem; line-height:1.7; }
 .guess-history strong { color:#FFE98B; }
 .guess-section-title { margin:4px 0 12px; color:#FFF0AE; font-size:1rem; }

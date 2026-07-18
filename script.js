@@ -1114,6 +1114,7 @@ function assignMissionAlias() {
 }
 
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
+let _guessWhoHistoryAlias = '';
 const GUESS_WHO_OPENING_STORAGE_KEY = 'guessWhoOpeningSeen';
 // 테스트 기간에는 미션 인증 여부와 관계없이 데모 게임을 바로 진행합니다.
 function isGuessWhoTestMode() { return true; }
@@ -1243,7 +1244,10 @@ function renderGuessWhoCards() {
         const value = answers[item.alias] || '';
         const options = [`<option value="">사람을 선택하세요</option>`, `<option value="unknown"${value === 'unknown' ? ' selected' : ''}>모르겠어요</option>`]
             .concat(candidates.map(candidate => `<option value="${escHtml(candidate.id)}"${value === candidate.id ? ' selected' : ''}${selectedIds.has(candidate.id) && value !== candidate.id ? ' disabled' : ''}>${escHtml(candidate.name)}</option>`));
-        return `<article class="guess-card"><h4>🌱 ${escHtml(item.alias)}</h4><div class="guess-hints">${item.records.length}일 인증 · 평균 ${formatGuessWhoTime(item.averageTime)} · 첫 인증 ${item.firstCount}회</div><select class="guess-select" data-alias="${escHtml(item.alias)}">${options.join('')}</select><button class="guess-history-btn" data-history="${escHtml(item.alias)}">지난 인증 기록 보기</button></article>`;
+        const history = _guessWhoHistoryAlias === item.alias
+            ? `<div class="guess-inline-history"><strong>${escHtml(item.alias)}의 인증 기록</strong><br>${item.records.map(record => `${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}${record.photoData ? ' · 사진 인증' : ''}`).join('<br>')}</div>`
+            : '';
+        return `<article class="guess-card"><h4>🌱 ${escHtml(item.alias)}</h4><div class="guess-hints">${item.records.length}일 인증 · 평균 ${formatGuessWhoTime(item.averageTime)} · 첫 인증 ${item.firstCount}회</div><select class="guess-select" data-alias="${escHtml(item.alias)}">${options.join('')}</select><button class="guess-history-btn" data-history="${escHtml(item.alias)}">지난 인증 기록 보기</button>${history}</article>`;
     }).join('');
     cards.querySelectorAll('.guess-select').forEach(select => select.addEventListener('change', () => {
         _guessWhoState.answers[select.dataset.alias] = select.value;
@@ -1254,11 +1258,9 @@ function renderGuessWhoCards() {
     cards.querySelectorAll('.guess-history-btn').forEach(button => button.addEventListener('click', () => showGuessWhoHistory(button.dataset.history)));
 }
 function showGuessWhoHistory(alias) {
-    const item = _guessWhoState.aliases.find(entry => entry.alias === alias);
-    const panel = document.getElementById('guess-who-history');
-    if (!item) return;
-    panel.style.display = '';
-    panel.innerHTML = `<strong>${escHtml(alias)}의 인증 기록</strong><br>${item.records.map(record => `${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}${record.photoData ? ' · 사진 인증' : ''}`).join('<br>')}`;
+    _guessWhoHistoryAlias = _guessWhoHistoryAlias === alias ? '' : alias;
+    document.getElementById('guess-who-history').style.display = 'none';
+    renderGuessWhoCards();
 }
 function openGuessWhoReview() {
     hideGuessWhoSections();
