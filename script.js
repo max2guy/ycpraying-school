@@ -182,7 +182,6 @@ const MISSION_ALIAS_STORAGE_KEY = 'missionAlias';
 const GUESS_WHO_CANDIDATE_STORAGE_KEY = 'guessWhoCandidateId';
 const GUESS_WHO_DRAFT_STORAGE_KEY = 'guessWhoDraft';
 const GUESS_WHO_SUBMITTED_STORAGE_KEY = 'guessWhoSubmitted';
-const GUESS_WHO_OPEN_AT = 1785078000000;
 const MISSION_ALIASES = [
     '작은겨자씨', '고요한등불', '푸른감람나무', '새벽이', '평안이', '말씀지킴이', '기쁨의샘', '작은소금',
     '은혜의길', '포도나무가지', '빛의자녀', '충성된청지기', '시온의노래', '생명의샘', '주의손길', '소망의씨앗',
@@ -1116,7 +1115,8 @@ function assignMissionAlias() {
 
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
 function isGuessWhoTestMode() { return new URLSearchParams(location.search).get('guessWhoTest') === '1'; }
-function isGuessWhoOpen() { return isGuessWhoTestMode() || Date.now() >= GUESS_WHO_OPEN_AT; }
+// 테스트 기간에는 실제 게임도 날짜와 관계없이 바로 열어 둡니다.
+function isGuessWhoOpen() { return true; }
 function getGuessWhoDraft() {
     try { return JSON.parse(localStorage.getItem(GUESS_WHO_DRAFT_STORAGE_KEY)) || {}; } catch (_) { return {}; }
 }
