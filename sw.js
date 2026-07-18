@@ -1,4 +1,4 @@
-// Service Worker Version 111 (v1.4.4)
+// Service Worker Version 112 (v1.4.5)
 
 /* ===== FCM 백그라운드 메시지 — SW 최상단에 초기화 필수 ===== */
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
@@ -16,10 +16,19 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 백그라운드 메시지 핸들러 — webpush.notification이 시스템 알림을 자동 표시하므로
-// 여기서 showNotification을 다시 호출하면 중복 알림이 발생한다.
-messaging.onBackgroundMessage(_payload => {
-    // no-op: Cloud Functions의 webpush.notification이 알림 표시를 담당
+// 백그라운드 메시지는 서비스 워커가 직접 표시한다.
+// 브라우저별 Firebase 자동 표시 차이를 없애 macOS·Android에서 동일하게 동작시킨다.
+messaging.onBackgroundMessage(payload => {
+    const data = payload.data || {};
+    const title = data.title || payload.notification?.title;
+    const body = data.body || payload.notification?.body || '';
+    if (!title) return;
+    return self.registration.showNotification(title, {
+        body,
+        icon: 'notification-icon.svg',
+        badge: 'notification-badge.png',
+        data: { url: 'https://ycpraying-school.web.app/' }
+    });
 });
 
 // 알림 탭 → 앱 열기
@@ -37,7 +46,7 @@ self.addEventListener('notificationclick', e => {
 });
 
 /* ===== 캐시 전략 ===== */
-const CACHE_NAME = 'yc-school-v21';
+const CACHE_NAME = 'yc-school-v22';
 
 const FILES_TO_CACHE = [
     './',

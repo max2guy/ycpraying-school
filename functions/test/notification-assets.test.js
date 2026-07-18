@@ -4,15 +4,12 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
-test('notification payload uses dedicated icon and badge assets', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
-  const notificationBlock = source.match(
-    /webpush:\s*{\s*notification:\s*{([\s\S]*?)}\s*,\s*fcmOptions:/
-  )?.[1];
-
-  assert.ok(notificationBlock, 'webpush notification block should exist');
-  assert.match(notificationBlock, /icon:\s+APP_URL \+ 'notification-icon\.svg'/);
-  assert.match(notificationBlock, /badge:\s+APP_URL \+ 'notification-badge\.png'/);
+test('service worker directly displays background notification', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', '..', 'sw.js'), 'utf8');
+  assert.match(source, /messaging\.onBackgroundMessage/);
+  assert.match(source, /self\.registration\.showNotification/);
+  assert.match(source, /icon:\s*'notification-icon\.svg'/);
+  assert.match(source, /badge:\s*'notification-badge\.png'/);
 });
 
 test('notification badge is the verified 96px RGBA cross', () => {
