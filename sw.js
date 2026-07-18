@@ -1,17 +1,17 @@
-// Service Worker Version 105 (v1.3.2)
+// Service Worker Version 106 (v1.3.2)
 
 /* ===== FCM 백그라운드 메시지 — SW 최상단에 초기화 필수 ===== */
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-    apiKey: "AIzaSyAF-L1RGBMb_uZBR4a3Aj0OVFu_KjccWZQ",
-    authDomain: "ycprayer-7eac2.firebaseapp.com",
-    databaseURL: "https://ycprayer-7eac2-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "ycprayer-7eac2",
-    storageBucket: "ycprayer-7eac2.firebasestorage.app",
-    messagingSenderId: "308314713888",
-    appId: "1:308314713888:web:dc52dc7ba1ac7b76153145"
+    apiKey: "AIzaSyCwQo19qhz6W-j_fKFef6OXSJhrRfOIwLE",
+    authDomain: "ycpraying-school.firebaseapp.com",
+    databaseURL: "https://ycpraying-school-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "ycpraying-school",
+    storageBucket: "ycpraying-school.firebasestorage.app",
+    messagingSenderId: "306183429866",
+    appId: "1:306183429866:web:22c833d483d69fccec0193"
 });
 
 const messaging = firebase.messaging();
@@ -25,11 +25,11 @@ messaging.onBackgroundMessage(_payload => {
 // 알림 탭 → 앱 열기
 self.addEventListener('notificationclick', e => {
     e.notification.close();
-    const url = (e.notification.data && e.notification.data.url) || 'https://max2guy.github.io/ycpraying/';
+    const url = (e.notification.data && e.notification.data.url) || 'https://ycpraying-school.web.app/';
     e.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
             for (const c of list) {
-                if (c.url.startsWith('https://max2guy.github.io/ycpraying') && 'focus' in c) return c.focus();
+                if (c.url.startsWith('https://ycpraying-school.web.app/') && 'focus' in c) return c.focus();
             }
             if (clients.openWindow) return clients.openWindow(url);
         })
@@ -37,7 +37,7 @@ self.addEventListener('notificationclick', e => {
 });
 
 /* ===== 캐시 전략 ===== */
-const CACHE_NAME = 'yc-school-v15';
+const CACHE_NAME = 'yc-school-v16';
 
 const FILES_TO_CACHE = [
     './',

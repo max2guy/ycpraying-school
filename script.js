@@ -268,8 +268,8 @@ function createSafeElement(tag, className, text) {
 }
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
-const FCM_VAPID_KEY = ''; // Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 푸시 인증서에서 생성 후 교체
-const CURRENT_VERSION = '1.3.1';
+const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
+const CURRENT_VERSION = '1.3.2';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {

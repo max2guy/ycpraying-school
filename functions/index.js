@@ -3,7 +3,7 @@ const admin     = require('firebase-admin');
 const { summarizePushResponse } = require('./push-result');
 admin.initializeApp();
 
-const APP_URL = 'https://max2guy.github.io/ycpraying/';
+const APP_URL = 'https://ycpraying-school.web.app/';
 
 /* ── 전체 FCM 토큰 수집 (특정 senderId 제외 가능) ── */
 async function getAllTokens(excludeSessionId) {
