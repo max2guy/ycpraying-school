@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const admin     = require('firebase-admin');
 const { summarizePushResponse } = require('./push-result');
-const { getIncompleteMissionTokens, isMissionReminderDate } = require('./mission-reminder');
+const { getIncompleteMissionTokens, isMissionReminderDate, pickRandomMissionWinner } = require('./mission-reminder');
 admin.initializeApp();
 
 const APP_URL = 'https://ycpraying-school.web.app/';
@@ -70,6 +70,12 @@ function getKstDateString() {
     }).formatToParts(new Date());
     const value = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
     return `${value.year}-${value.month}-${value.day}`;
+}
+
+function getPreviousDateString(date) {
+    const previous = new Date(date + 'T00:00:00Z');
+    previous.setUTCDate(previous.getUTCDate() - 1);
+    return previous.toISOString().slice(0, 10);
 }
 
 /* ── 1. 새 기도 멤버 추가 ── */
@@ -175,6 +181,43 @@ exports.remindIncompleteMission = functions
             '📖 오늘 미션 인증을 잊지 마세요',
             '지금 인증하면 오늘의 시크릿기프트에도 참여할 수 있어요!',
             { type: 'mission_reminder' }
+        );
+        return null;
+    });
+
+/* ── 6. 랜덤 선물: 인증 마감 5분 뒤, 서버에서 한 번만 확정 ── */
+exports.drawRandomMissionWinner = functions
+    .region('asia-northeast3')
+    .pubsub.schedule('5 6 * * *')
+    .timeZone('Asia/Seoul')
+    .onRun(async () => {
+        const date = getPreviousDateString(getKstDateString());
+        if (!isMissionReminderDate(date)) {
+            console.log('[GIFT] random_draw skipped', { date });
+            return null;
+        }
+        const db = admin.database();
+        const previousDate = getPreviousDateString(date);
+        const [missionSnap, previousWinnerSnap] = await Promise.all([
+            db.ref(`missions/${date}`).once('value'),
+            db.ref(`missions/${previousDate}/_randomWinner`).once('value')
+        ]);
+        const completions = missionSnap.val() || {};
+        if (completions._randomWinner) return null;
+        const picked = pickRandomMissionWinner(completions, previousWinnerSnap.val()?.sessionId);
+        if (!picked) return null;
+        const winnerRef = db.ref(`missions/${date}/_randomWinner`);
+        const transaction = await winnerRef.transaction(current => current || ({
+            ...picked,
+            timestamp: admin.database.ServerValue.TIMESTAMP
+        }));
+        if (!transaction.committed || transaction.snapshot.val()?.sessionId !== picked.sessionId) return null;
+        const tokenDatas = await getAllTokens(null);
+        await sendPush(
+            tokenDatas.filter(({ sessionId }) => sessionId === picked.sessionId),
+            '🎁 어제의 랜덤 선물 당첨!',
+            `${picked.memberName}님, 시크릿기프트에 당첨되었어요!`,
+            { type: 'random_gift_winner' }
         );
         return null;
     });
