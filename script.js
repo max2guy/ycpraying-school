@@ -129,6 +129,37 @@ const guessWhoCandidatesRef = database.ref('guessWhoCandidates');
 const guessWhoAnswersRef = database.ref('guessWhoAnswers');
 const guessWhoResultsRef = database.ref('guessWhoResults');
 const guessWhoGameRef = database.ref('guessWhoGame');
+let isEventFinished = false;
+let realNameByAlias = {};
+
+function formatEventDisplayName(alias) {
+    const realName = isEventFinished && realNameByAlias[alias];
+    return realName ? `${realName} (구: ${alias})` : alias;
+}
+function refreshFinishedEventNames() {
+    members.forEach(member => { member.displayName = formatEventDisplayName(member.name); });
+    updateNodeVisuals();
+    if (currentMemberData) document.getElementById('panel-name').innerText = currentMemberData.displayName || currentMemberData.name;
+    if (Object.keys(_missionCompletionsCache).length) _renderMissionMembers(_missionCompletionsCache);
+}
+function syncFinishedEventNames() {
+    guessWhoParticipantsRef.once('value').then(snap => {
+        realNameByAlias = Object.values(snap.val() || {}).reduce((names, participant) => {
+            if (participant && participant.aliasName && participant.realName) names[participant.aliasName] = participant.realName;
+            return names;
+        }, {});
+        refreshFinishedEventNames();
+    });
+}
+function watchFinishedEventNames() {
+    guessWhoGameRef.on('value', snap => {
+        const finished = (snap.val() || {}).status === 'RESULT_REVEALED';
+        if (finished === isEventFinished) return;
+        isEventFinished = finished;
+        if (finished) syncFinishedEventNames();
+        else { realNameByAlias = {}; refreshFinishedEventNames(); }
+    });
+}
 
 // ── 일일미션 스케줄 (수련회 사전 프로그램 7/20-7/26) ──
 const MISSION_SCHEDULE = [
@@ -948,7 +979,7 @@ function updateNodeVisuals() {
         } else {
             // 멤버: 이름을 버블 아래에 표시
             const ty = r + 18;
-            textEl.attr("y", ty).attr("x", 0).text(d.name)
+            textEl.attr("y", ty).attr("x", 0).text(d.displayName || d.name)
                 .attr("font-size","13px").attr("fill","#5C3A6A").attr("font-weight","900");
             const bbox = textEl.node().getBBox();
             const pw = Math.max(bbox.width + 22, 50);
@@ -1060,6 +1091,7 @@ let _missionPhotoData = null;
 let _missionPopupListener = null;
 let _missionCompletionsCache = {};
 let _missionSubmittedPrayerText = '';
+watchFinishedEventNames();
 
 function getMissionAlias() { return localStorage.getItem(MISSION_ALIAS_STORAGE_KEY) || ''; }
 function updateMissionAliasUI(alias) {
@@ -1619,7 +1651,7 @@ function _renderMissionMembers(completions) {
     grid.innerHTML = entries
         .sort((a, b) => (a[1].timestamp||0) - (b[1].timestamp||0))
         .map(([uid, data]) => {
-            const name = escHtml(data.memberName || '멤버');
+            const name = escHtml(formatEventDisplayName(data.memberName || '멤버'));
             const clickable = data.photoData ? `onclick="_openMissionMemberPhoto('${uid}')" style="cursor:pointer"` : '';
             const deleteBtn = isAdmin ? `<button class="mission-member-delete-btn" onclick="event.stopPropagation(); adminDeleteMissionSubmission('${uid}')" aria-label="인증 사진 삭제">×</button>` : '';
             const giftBadge = uid === winnerUid ? '<span class="mission-gift-badge">🎁</span>' : '';
@@ -1633,7 +1665,7 @@ function _updateGiftBanner(firstPlace) {
     const banner = document.getElementById('mission-gift-banner');
     if (!banner) return;
     if (firstPlace && firstPlace.memberName) {
-        document.getElementById('mission-gift-winner').textContent = firstPlace.memberName;
+        document.getElementById('mission-gift-winner').textContent = formatEventDisplayName(firstPlace.memberName);
         banner.style.display = 'flex';
     } else {
         banner.style.display = 'none';
@@ -1659,8 +1691,8 @@ function openGiftWinnersModal() {
         if (dates.length === 0) { listEl.textContent = '당첨 기록이 없어요.'; return; }
         listEl.innerHTML = dates.map(date => {
             const d = data[date];
-            const first = d._firstPlace ? escHtml(d._firstPlace.memberName) : '-';
-            const random = d._randomWinner ? escHtml(d._randomWinner.memberName) : '-';
+            const first = d._firstPlace ? escHtml(formatEventDisplayName(d._firstPlace.memberName)) : '-';
+            const random = d._randomWinner ? escHtml(formatEventDisplayName(d._randomWinner.memberName)) : '-';
             return `<div>${escHtml(date)} — 1등: ${first} · 랜덤: ${random}</div>`;
         }).join('');
     }).catch(err => { listEl.textContent = '불러오기 실패: ' + err.message; });
@@ -1716,7 +1748,7 @@ function openPrayerPopup(data) {
     localStorage.setItem('prayerReadStatus', JSON.stringify(readStatus));
     // [핵심 3] 모바일 팝업 시 시뮬레이션 멈추는(stop) 로직 삭제 -> 뒤에서 부드럽게 움직이도록 둠
     updateNodeVisuals();
-    document.getElementById("panel-name").innerText = data.name;
+    document.getElementById("panel-name").innerText = data.displayName || data.name;
     document.getElementById("current-color-display").style.backgroundColor = data.color;
     document.getElementById("prayer-popup").classList.add('active');
     document.getElementById("prayer-list").innerHTML = `<div class="skeleton-card"><div class="skeleton sk-text-sm"></div><div class="skeleton sk-text"></div><div class="skeleton sk-text" style="width:60%"></div><div class="skeleton sk-block"></div></div>`;
