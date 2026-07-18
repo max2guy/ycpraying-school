@@ -2,15 +2,17 @@
   "rules": {
     "members": {
       ".read": true,
-      ".write": true
+      "$memberId": {
+        ".write": "auth != null && (auth.token.email === 'admin@church.com' || (!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
+      }
     },
     "presence": {
       ".read": true,
-      ".write": true
+      "$uid": { ".write": "auth != null && $uid === auth.uid" }
     },
     "messages": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "centerNode": {
       ".read": true,
@@ -18,12 +20,12 @@
     },
     "fcmTokens": {
       ".read": false,
-      ".write": true
+      "$uid": { ".write": "auth != null && $uid === auth.uid" }
     },
     "notificationDiagnostics": {
       ".read": false,
       "$sessionId": {
-        ".write": true
+        ".write": "auth != null && $sessionId === auth.uid"
       }
     },
     "prayerEvents": {
@@ -34,28 +36,28 @@
       ".read": true,
       "$date": {
         "$sessionId": {
-          ".write": true
+          ".write": "auth != null && ($sessionId === auth.uid || ($sessionId === '_firstPlace' && !data.exists()))"
         }
       }
     },
     "missionAliases": {
       ".read": true,
-      ".write": true
+      "$alias": { ".write": "auth != null && (!data.exists() ? newData.val() === auth.uid : data.val() === auth.uid && newData.val() === auth.uid)" }
     },
     "guessWhoParticipants": {
       ".read": false,
       "$sessionId": {
-        ".write": true
+        ".write": "auth != null && $sessionId === auth.uid"
       }
     },
     "guessWhoCandidates": {
       ".read": "now >= 1785078000000",
-      ".write": true
+      ".write": "auth != null"
     },
     "guessWhoAnswers": {
       ".read": false,
       "$sessionId": {
-        ".write": "!data.exists()"
+        ".write": "auth != null && $sessionId === auth.uid && !data.exists()"
       }
     },
     "guessWhoResults": {

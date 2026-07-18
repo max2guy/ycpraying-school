@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.5 — 중고등부 전용 (S1 기반)
+// v1.4.6 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -187,6 +187,7 @@ function isMissionSubmitWindowOpen() {
     const testDay = Number(new URLSearchParams(location.search).get('missionTest'));
     if (testDay >= 1 && testDay <= 7) return true;
     const missionDate = getMissionKstDateStr();
+    if (missionDate < MISSION_SCHEDULE[0].date) return true;
     return missionDate >= MISSION_SCHEDULE[0].date && missionDate <= MISSION_SCHEDULE[5].date;
 }
 function _getPrevKstDateStr(dateStr) {
@@ -215,6 +216,14 @@ if (!mySessionId) {
     mySessionId = 'user_' + Date.now();
     localStorage.setItem('mySessionId', mySessionId);
 }
+const participantAuthReady = firebase.auth().currentUser
+    ? Promise.resolve(firebase.auth().currentUser)
+    : firebase.auth().signInAnonymously().then(result => result.user);
+participantAuthReady.then(user => {
+    mySessionId = user.uid;
+    localStorage.setItem('mySessionId', mySessionId);
+    if (typeof myPresenceRef !== 'undefined') myPresenceRef = presenceRef.child(mySessionId);
+}).catch(error => console.error('[Auth] 익명 참가자 인증 실패:', error));
 
 const MISSION_ALIAS_STORAGE_KEY = 'missionAlias';
 const GUESS_WHO_CANDIDATE_STORAGE_KEY = 'guessWhoCandidateId';
@@ -276,7 +285,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.5';
+const CURRENT_VERSION = '1.4.6';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -438,6 +447,7 @@ async function registerFCMToken() {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     console.log('[FCM] 토큰 등록 시작 | perm:', Notification.permission, '| flag:', localStorage.getItem('notificationEnabled'));
     try {
+        await participantAuthReady;
         setNotifUI('loading');
         const msg = firebase.messaging();
         const reg = await waitForNotificationRegistration(navigator.serviceWorker.ready, 10000, '서비스 워커 준비 시간이 초과됐습니다.');
@@ -553,7 +563,7 @@ function handleNotifToggle() {
 if ('Notification' in window && 'serviceWorker' in navigator && Notification.permission === 'granted') {
     const _startFlag = localStorage.getItem('notificationEnabled');
     if (_startFlag === 'true' || _startFlag === null) {
-        navigator.serviceWorker.ready.then(() => registerFCMToken()).catch(() => {});
+        participantAuthReady.then(() => navigator.serviceWorker.ready).then(() => registerFCMToken()).catch(() => {});
     }
 }
 
@@ -575,7 +585,7 @@ async function getMyIp() {
 // ── 접속자 현황 ──
 // 세션ID 고정 경로: 1세션 = 1레코드 보장
 let myPresenceRef = presenceRef.child(mySessionId);
-console.log('[ycpraying-school v1.4.5] membersRef:', membersRef.toString());
+console.log('[ycpraying-school v1.4.6] membersRef:', membersRef.toString());
 const PRESENCE_TTL = 5 * 60 * 1000; // 5분 이상 heartbeat 없으면 stale
 
 function registerPresenceListeners() {
@@ -706,7 +716,7 @@ function containsBannedWords(text) { return bannedWords.some(w => text.includes(
 
 // ── 관리자 인증 ──
 firebase.auth().onAuthStateChanged(user => {
-    if (user) {
+    if (user && user.email === 'admin@church.com') {
         isAdmin = true;
         document.getElementById('body').classList.add('admin-mode');
         const btn = document.getElementById('btn-broadcast-update');
@@ -997,7 +1007,7 @@ function updateNodeVisuals() {
         d._r = r; // gameLoop 선 오프셋용 반경 캐시
         if (main.attr("r") == 0) {
             main.transition().delay(textDelay).duration(isFirstRender ? 900 : 600)
-                .ease(d3.easeElasticOut.amplitude(2.2)).attr("r", r).style("opacity", 1);
+                .ease(d3.easeCubicOut).attr("r", r).style("opacity", 1);
         } else {
             // opacity도 함께 1로 보장: child_changed 인터럽트로 입장 애니메이션이 중단돼도 노드가 사라지지 않게
             main.transition().duration(500).attr("r", r).style("opacity", 1);
@@ -1210,10 +1220,10 @@ function assignMissionAlias() {
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
 let _guessWhoHistoryAlias = '';
 const GUESS_WHO_OPENING_STORAGE_KEY = 'guessWhoOpeningSeen';
-// 테스트 기간에는 미션 인증 여부와 관계없이 데모 게임을 바로 진행합니다.
-function isGuessWhoTestMode() { return true; }
-// 테스트 기간에는 실제 게임도 날짜와 관계없이 바로 열어 둡니다.
-function isGuessWhoOpen() { return true; }
+function isGuessWhoTestMode() { return getMissionKstDateStr() < MISSION_SCHEDULE[0].date; }
+function isGuessWhoOpen() {
+    return isGuessWhoTestMode() || getMissionKstDateStr() > MISSION_SCHEDULE[MISSION_SCHEDULE.length - 1].date;
+}
 function getGuessWhoDraft() {
     try { return JSON.parse(localStorage.getItem(GUESS_WHO_DRAFT_STORAGE_KEY)) || {}; } catch (_) { return {}; }
 }
@@ -1221,10 +1231,6 @@ function initGuessWhoGame() {
     if (!isGuessWhoOpen()) return;
     const btn = document.getElementById('guess-who-btn');
     if (btn) btn.style.display = 'block';
-    if (!sessionStorage.getItem('guessWhoOpened')) {
-        sessionStorage.setItem('guessWhoOpened', 'true');
-        setTimeout(openGuessWhoGame, 1200);
-    }
 }
 function closeGuessWhoGame() {
     document.getElementById('guess-who-opening-video').pause();
@@ -1406,7 +1412,6 @@ function revealGuessWhoResults() {
         .then(() => openGuessWhoGame())
         .catch(error => alert('정답 공개 실패: ' + (error.message || '관리자 권한을 확인해주세요.')));
 }
-setTimeout(initGuessWhoGame, 1000);
 
 function openMissionPopup(selectedMission) {
     const currentMission = getTodayMission();
@@ -1617,6 +1622,7 @@ function ensureMissionMemberNode(memberName, prayerText, missionDate) {
                 id: `mission_${Date.now()}`,
                 name: memberName,
                 type: 'member',
+                ownerUid: firebase.auth().currentUser?.uid || '',
                 color: getRandomColor(),
                 prayers: [missionPrayer],
                 rotation: 0,
@@ -1852,7 +1858,7 @@ function addNewMember() {
     openSimpleModal('새 기도 멤버 추가', 'text', '이름을 입력하세요', '', name => {
         if (!name) return;
         if (containsBannedWords(name)) return alert("부적절한 이름입니다.");
-        membersRef.push({ id:`member_${Date.now()}`, name, type:"member", color:getRandomColor(), prayers:[], rotation:0, rotationDirection:1 }, err => {
+        membersRef.push({ id:`member_${Date.now()}`, name, type:"member", ownerUid:firebase.auth().currentUser?.uid || '', color:getRandomColor(), prayers:[], rotation:0, rotationDirection:1 }, err => {
             if (err) alert('멤버 추가 실패: ' + err.message);
         });
     });
@@ -2160,6 +2166,11 @@ function enterApp() {
         document.getElementById('intro-screen').style.display = 'none';
         isAppVisible = true;
         _checkRandomWinnerNotification();
+        initGuessWhoGame();
+        if (isGuessWhoOpen() && !sessionStorage.getItem('guessWhoOpened')) {
+            sessionStorage.setItem('guessWhoOpened', 'true');
+            openGuessWhoGame();
+        }
     }, 800);
 }
 function onPlayerStateChange(e) {
@@ -2430,4 +2441,3 @@ requestAnimationFrame(gameLoop);
 
 // ── 앱 초기 시즌 적용 ──
 applySeasonTheme();
-updateSeasonUI();
