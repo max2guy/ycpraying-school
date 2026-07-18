@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.6 — 중고등부 전용 (S1 기반)
+// v1.4.7 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -285,7 +285,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.6';
+const CURRENT_VERSION = '1.4.7';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -585,7 +585,7 @@ async function getMyIp() {
 // ── 접속자 현황 ──
 // 세션ID 고정 경로: 1세션 = 1레코드 보장
 let myPresenceRef = presenceRef.child(mySessionId);
-console.log('[ycpraying-school v1.4.6] membersRef:', membersRef.toString());
+console.log('[ycpraying-school v1.4.7] membersRef:', membersRef.toString());
 const PRESENCE_TTL = 5 * 60 * 1000; // 5분 이상 heartbeat 없으면 stale
 
 function registerPresenceListeners() {
@@ -1182,7 +1182,17 @@ function updateMissionAliasUI(alias) {
 }
 function assignMissionAlias() {
     const existingAlias = getMissionAlias();
-    if (existingAlias) { updateMissionAliasUI(existingAlias); return Promise.resolve(existingAlias); }
+    if (existingAlias) {
+        return missionAliasesRef.child(existingAlias).once('value').then(snap => {
+            if (snap.val() === mySessionId) { updateMissionAliasUI(existingAlias); return existingAlias; }
+            localStorage.removeItem(MISSION_ALIAS_STORAGE_KEY);
+            localStorage.removeItem(GUESS_WHO_CANDIDATE_STORAGE_KEY);
+            localStorage.removeItem(GUESS_WHO_DRAFT_STORAGE_KEY);
+            localStorage.removeItem(GUESS_WHO_SUBMITTED_STORAGE_KEY);
+            updateMissionAliasUI('');
+            return assignMissionAlias();
+        });
+    }
     if (_missionAliasAssignment) return _missionAliasAssignment;
     const realName = document.getElementById('mission-name-input').value.trim();
     if (!realName) return Promise.resolve('');
