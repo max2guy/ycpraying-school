@@ -180,7 +180,10 @@ function getMissionKstDateStr() {
     return kst.toISOString().slice(0, 10);
 }
 function isMissionSubmitWindowOpen() {
-    return true; // 오전 6시부터 다음 날 오전 5시 59분까지, 하루 24시간 인증 가능
+    const testDay = Number(new URLSearchParams(location.search).get('missionTest'));
+    if (testDay >= 1 && testDay <= 7) return true;
+    const missionDate = getMissionKstDateStr();
+    return missionDate >= MISSION_SCHEDULE[0].date && missionDate <= MISSION_SCHEDULE[5].date;
 }
 function _getPrevKstDateStr(dateStr) {
     const d = new Date(dateStr + 'T00:00:00Z');
