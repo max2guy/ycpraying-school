@@ -1,4 +1,4 @@
-// Service Worker Version 109 (v1.4.2)
+// Service Worker Version 110 (v1.4.3)
 
 /* ===== FCM 백그라운드 메시지 — SW 최상단에 초기화 필수 ===== */
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
@@ -37,13 +37,12 @@ self.addEventListener('notificationclick', e => {
 });
 
 /* ===== 캐시 전략 ===== */
-const CACHE_NAME = 'yc-school-v19';
+const CACHE_NAME = 'yc-school-v20';
 
 const FILES_TO_CACHE = [
     './',
     './index.html',
     './style.css',
-    './s2-entry.js',
     './script.js',
     './manifest.json',
     './icon-192.png',
