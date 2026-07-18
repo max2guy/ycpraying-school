@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.7 — 중고등부 전용 (S1 기반)
+// v1.4.8 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -285,7 +285,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.7';
+const CURRENT_VERSION = '1.4.8';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1310,15 +1310,7 @@ function buildGuessWhoAliases(missions) {
 }
 async function startGuessWhoGame() {
     if (isGuessWhoTestMode()) {
-        _guessWhoState = {
-            aliases: [
-                { alias: '작은겨자씨', records: [{ day:1, timestamp:Date.now() }], firstCount: 2, averageTime: 426 },
-                { alias: '고요한등불', records: [{ day:1, timestamp:Date.now() }], firstCount: 1, averageTime: 452 },
-                { alias: '푸른감람나무', records: [{ day:1, timestamp:Date.now() }], firstCount: 0, averageTime: 501 }
-            ],
-            candidates: [{ id:'demo_1', name:'김민수' }, { id:'demo_2', name:'박지훈' }, { id:'demo_3', name:'이서연' }],
-            answers: {}
-        };
+        _guessWhoState = { aliases: [], candidates: [], answers: {} };
         showGuessWhoBoard();
         return;
     }
@@ -1350,6 +1342,10 @@ function renderGuessWhoCards() {
     document.getElementById('guess-who-progress').textContent = `현재 선택 ${selectedCount} / ${aliases.length}명`;
     const selectedIds = new Set(Object.values(answers).filter(value => value && value !== 'unknown'));
     const cards = document.getElementById('guess-who-cards');
+    if (!aliases.length) {
+        cards.innerHTML = '<div class="guess-who-empty">아직 표시할 Guess Who 참가자 데이터가 없어요.</div>';
+        return;
+    }
     cards.innerHTML = aliases.map(item => {
         const value = answers[item.alias] || '';
         const options = [`<option value="">사람을 선택하세요</option>`, `<option value="unknown"${value === 'unknown' ? ' selected' : ''}>모르겠어요</option>`]
