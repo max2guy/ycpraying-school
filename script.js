@@ -1114,6 +1114,7 @@ function assignMissionAlias() {
 }
 
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
+const GUESS_WHO_OPENING_STORAGE_KEY = 'guessWhoOpeningSeen';
 function isGuessWhoTestMode() { return new URLSearchParams(location.search).get('guessWhoTest') === '1'; }
 // 테스트 기간에는 실제 게임도 날짜와 관계없이 바로 열어 둡니다.
 function isGuessWhoOpen() { return true; }
@@ -1129,10 +1130,33 @@ function initGuessWhoGame() {
         setTimeout(openGuessWhoGame, 1200);
     }
 }
-function closeGuessWhoGame() { document.getElementById('guess-who-popup').classList.remove('active'); }
+function closeGuessWhoGame() {
+    document.getElementById('guess-who-opening-video').pause();
+    document.getElementById('guess-who-popup').classList.remove('active');
+}
+function showGuessWhoOpening() {
+    if (sessionStorage.getItem(GUESS_WHO_OPENING_STORAGE_KEY)) return false;
+    const opening = document.getElementById('guess-who-opening');
+    const video = document.getElementById('guess-who-opening-video');
+    opening.classList.add('active');
+    video.currentTime = 0;
+    video.onended = finishGuessWhoOpening;
+    video.onerror = finishGuessWhoOpening;
+    video.play().catch(() => {});
+    return true;
+}
+function finishGuessWhoOpening() {
+    const opening = document.getElementById('guess-who-opening');
+    const video = document.getElementById('guess-who-opening-video');
+    video.pause();
+    opening.classList.remove('active');
+    sessionStorage.setItem(GUESS_WHO_OPENING_STORAGE_KEY, 'true');
+    openGuessWhoGame();
+}
 async function openGuessWhoGame() {
     if (!isGuessWhoOpen()) return;
     document.getElementById('guess-who-popup').classList.add('active');
+    if (showGuessWhoOpening()) return;
     hideGuessWhoSections();
     if (isGuessWhoTestMode()) {
         document.getElementById('guess-who-intro').style.display = '';

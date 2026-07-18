@@ -674,11 +674,16 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 @media(max-width:768px){ .guess-who-btn{top:64px;right:18px;padding:8px 11px;font-size:0.72rem;} }
 
 /* ── Guess Who? ── */
-#guess-who-popup .guess-who-content { height:85vh; border:0; border-radius:var(--r-lg); overflow:hidden; background:linear-gradient(160deg,#2C1758 0%,#4C287C 42%,#8552A7 100%); box-shadow:0 20px 56px rgba(53,23,93,0.42); transform:translateY(16px) scale(0.96); }
+#guess-who-popup .guess-who-content { position:relative; height:85vh; border:0; border-radius:var(--r-lg); overflow:hidden; background:linear-gradient(160deg,#2C1758 0%,#4C287C 42%,#8552A7 100%); box-shadow:0 20px 56px rgba(53,23,93,0.42); transform:translateY(16px) scale(0.96); }
 #guess-who-popup.active .guess-who-content { transform:translateY(0) scale(1); }
 .guess-who-content .popup-header { position:relative; z-index:1; color:#fff; border-bottom-color:rgba(255,255,255,0.16); background:rgba(35,17,71,0.46); }
 .guess-who-content .popup-header h2 { color:#fff; text-shadow:0 2px 12px rgba(0,0,0,0.22); }
 .guess-who-content .close-btn { color:#F5DEFF; }
+.guess-who-opening { display:none; position:absolute; inset:0; z-index:10; overflow:hidden; background:#160A36; }
+.guess-who-opening.active { display:block; }
+.guess-who-opening video { width:100%; height:100%; object-fit:cover; }
+.guess-who-opening-shade { position:absolute; inset:0; background:linear-gradient(180deg,rgba(16,5,40,0.08) 45%,rgba(16,5,40,0.52)); pointer-events:none; }
+.guess-who-skip-btn { position:absolute; right:16px; top:16px; border:1px solid rgba(255,255,255,0.5); border-radius:50px; background:rgba(24,10,55,0.52); color:#fff; padding:8px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; backdrop-filter:blur(5px); }
 .guess-who-scroll { position:relative; overflow-y:auto; height:calc(85vh - 56px); padding:16px; background:radial-gradient(circle at 12% 8%,rgba(255,207,103,0.22),transparent 28%),radial-gradient(circle at 92% 38%,rgba(243,145,255,0.22),transparent 30%); }
 .guess-who-scroll::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:0.26; background-image:radial-gradient(#fff 1px,transparent 1.5px); background-size:28px 28px; }
 .guess-who-scroll > section { position:relative; z-index:1; }

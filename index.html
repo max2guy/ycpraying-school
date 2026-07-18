@@ -21,7 +21,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js" defer></script>
-    <script src="script.js?v=117" defer></script>
+    <script src="script.js?v=118" defer></script>
 </head>
 <body id="body">
 
@@ -400,6 +400,13 @@
     <!-- Guess Who? 보너스 게임 -->
     <div id="guess-who-popup" class="popup-overlay" onclick="closeGuessWhoGame()">
         <div class="popup-content guess-who-content" onclick="event.stopPropagation()">
+            <section id="guess-who-opening" class="guess-who-opening" aria-label="Guess Who 오프닝 영상">
+                <video id="guess-who-opening-video" muted playsinline preload="metadata">
+                    <source src="assets/guess-who-opening.mp4" type="video/mp4">
+                </video>
+                <div class="guess-who-opening-shade"></div>
+                <button class="guess-who-skip-btn" onclick="finishGuessWhoOpening()">건너뛰기</button>
+            </section>
             <div class="sheet-handle"></div>
             <div class="popup-header">
                 <h2>🕵️ Guess Who?</h2>
