@@ -1136,6 +1136,10 @@ function closeGuessWhoGame() {
 }
 function showGuessWhoOpening() {
     if (sessionStorage.getItem(GUESS_WHO_OPENING_STORAGE_KEY)) return false;
+    replayGuessWhoOpening();
+    return true;
+}
+function replayGuessWhoOpening() {
     const opening = document.getElementById('guess-who-opening');
     const video = document.getElementById('guess-who-opening-video');
     opening.classList.add('active');
@@ -1143,7 +1147,6 @@ function showGuessWhoOpening() {
     video.onended = finishGuessWhoOpening;
     video.onerror = finishGuessWhoOpening;
     video.play().catch(() => {});
-    return true;
 }
 function finishGuessWhoOpening() {
     const opening = document.getElementById('guess-who-opening');

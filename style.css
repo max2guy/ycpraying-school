@@ -702,6 +702,7 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .guess-who-intro ul { display:block; margin:18px 0; padding:13px 18px 13px 34px; text-align:left; border:1px solid rgba(255,255,255,0.22); border-radius:var(--r-md); background:rgba(255,255,255,0.13); color:#FBF6FF; font-size:0.76rem; line-height:1.9; box-shadow:inset 0 1px rgba(255,255,255,0.18); }
 .guess-primary-btn,.guess-secondary-btn { border:none; border-radius:var(--r-md); padding:13px 16px; font-weight:800; cursor:pointer; font-size:0.9rem; }
 .guess-primary-btn { width:100%; color:#422052; background:linear-gradient(135deg,#FFE878,#FFB860 48%,#FF83C1); box-shadow:0 8px 20px rgba(14,4,40,0.34),inset 0 1px rgba(255,255,255,0.62); }
+.guess-replay-btn { margin-top:10px; border:0; background:transparent; color:#FDECA6; font-size:0.78rem; font-weight:800; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
 .guess-secondary-btn { background:rgba(255,255,255,0.9); color:#5E3D91; }
 .guess-save-status { text-align:center; color:#F5E9FF; font-size:0.74rem; font-weight:700; margin:0 0 10px; }
 .guess-progress { margin-bottom:12px; padding:11px 13px; border:1px solid rgba(255,236,143,0.42); border-radius:var(--r-md); background:linear-gradient(100deg,rgba(255,219,113,0.24),rgba(255,255,255,0.16)); color:#fff; font-size:0.8rem; font-weight:800; box-shadow:inset 0 1px rgba(255,255,255,0.18); }
