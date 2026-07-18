@@ -172,15 +172,15 @@ const MISSION_SCHEDULE = [
     { date:'2026-07-26', day:7, label:'주일',  range:'사도행전 2:17 암송', desc:'"하나님이 말씀하시기를 말세에 내가 내 영을 모든 육체에 부어 주리니 너희의 자녀들은 예언할 것이요 너희의 젊은이들은 환상을 보고 너희의 늙은이들은 꿈을 꾸리라"', noSubmit:true },
 ];
 
-function getTodayKstDateStr() {
+const MISSION_RESET_HOUR = 6;
+
+function getMissionKstDateStr() {
     const kst = new Date(Date.now() + 9 * 3600 * 1000);
+    if (kst.getUTCHours() < MISSION_RESET_HOUR) kst.setUTCDate(kst.getUTCDate() - 1);
     return kst.toISOString().slice(0, 10);
 }
-function getKstHour() {
-    return new Date(Date.now() + 9 * 3600 * 1000).getUTCHours();
-}
 function isMissionSubmitWindowOpen() {
-    return getKstHour() >= 7; // 07:00~23:59 허용, 00:00~06:59 차단
+    return true; // 오전 6시부터 다음 날 오전 5시 59분까지, 하루 24시간 인증 가능
 }
 function _getPrevKstDateStr(dateStr) {
     const d = new Date(dateStr + 'T00:00:00Z');
@@ -191,7 +191,7 @@ function getTodayMission() {
     // 테스트용: ?missionTest=1~7 → 오늘 날짜와 무관하게 해당 일차 미리보기
     const testDay = Number(new URLSearchParams(location.search).get('missionTest'));
     if (testDay >= 1 && testDay <= 7) return MISSION_SCHEDULE[testDay - 1];
-    const today = getTodayKstDateStr();
+    const today = getMissionKstDateStr();
     const exact = MISSION_SCHEDULE.find(m => m.date === today);
     if (exact) return exact;
     // 앱 정식 공개(7/20)와 무관하게 언제든 열람/인증 가능 — 기간 전에는 1일차, 기간 후에는 마지막 날 유지
@@ -1488,7 +1488,7 @@ function rotateMissionPhoto(degrees) {
 }
 
 function submitMission() {
-    if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증은 오전 7시부터 자정까지만 제출할 수 있어요.'); return; }
+    if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증 가능 시간을 확인해주세요.'); return; }
     if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
     const enteredName = document.getElementById('mission-name-input').value.trim();
     if (!enteredName) { alert('✍️ 처음 한 번만 이름을 입력해주세요!'); return; }
@@ -1603,7 +1603,7 @@ function closeMissionWinnerPopup() {
 }
 
 function _checkRandomWinnerNotification() {
-    const today = getTodayKstDateStr();
+    const today = getMissionKstDateStr();
     const yesterday = _getPrevKstDateStr(today);
     const flagKey = 'randomWinnerNotified_' + yesterday;
     if (localStorage.getItem(flagKey)) return;
@@ -1617,7 +1617,7 @@ function _checkRandomWinnerNotification() {
 }
 
 function editMissionSubmission() {
-    if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증은 오전 7시부터 자정까지만 다시 제출할 수 있어요.'); return; }
+    if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증 가능 시간을 확인해주세요.'); return; }
     if (!confirm('제출한 인증을 취소하고 사진을 다시 선택할까요?')) return;
     const mission = getTodayMission();
     if (!mission) return;
