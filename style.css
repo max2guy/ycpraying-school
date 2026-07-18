@@ -674,40 +674,52 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 @media(max-width:768px){ .guess-who-btn{top:64px;right:18px;padding:8px 11px;font-size:0.72rem;} }
 
 /* ── Guess Who? ── */
-#guess-who-popup .guess-who-content { height:85vh; border-radius:var(--r-lg); transform:translateY(16px) scale(0.96); }
+#guess-who-popup .guess-who-content { height:85vh; border:0; border-radius:var(--r-lg); overflow:hidden; background:linear-gradient(160deg,#2C1758 0%,#4C287C 42%,#8552A7 100%); box-shadow:0 20px 56px rgba(53,23,93,0.42); transform:translateY(16px) scale(0.96); }
 #guess-who-popup.active .guess-who-content { transform:translateY(0) scale(1); }
-.guess-who-scroll { overflow-y:auto; height:calc(85vh - 56px); padding:16px; }
-.guess-who-intro { text-align:center; padding:18px 8px 12px; }
-.guess-who-orbit { width:66px; height:66px; margin:0 auto 10px; border-radius:50%; display:grid; place-items:center; color:#fff; font-size:2rem; background:radial-gradient(circle at 35% 30%,#E5D8FF,#8264BF); box-shadow:0 0 0 9px rgba(151,119,214,0.10),0 10px 26px rgba(113,87,173,0.25); animation:guessOrbit 2.6s ease-in-out infinite; }
-@keyframes guessOrbit { 50%{transform:translateY(-6px) rotate(14deg);box-shadow:0 0 0 14px rgba(151,119,214,0.05),0 16px 30px rgba(113,87,173,0.25);} }
-.guess-who-title { color:#7157AD; font-size:2rem; font-weight:900; letter-spacing:-0.05em; }
-.guess-who-intro h3 { margin:4px 0 12px; color:var(--text); font-size:1.05rem; }
-.guess-who-intro p { margin:0; color:var(--text-dim); line-height:1.65; font-size:0.88rem; }
-.guess-who-intro ul { display:inline-block; margin:18px 0; padding:12px 18px 12px 34px; text-align:left; border-radius:var(--r-md); background:rgba(151,119,214,0.08); color:var(--text-muted); font-size:0.76rem; line-height:1.85; }
+.guess-who-content .popup-header { position:relative; z-index:1; color:#fff; border-bottom-color:rgba(255,255,255,0.16); background:rgba(35,17,71,0.46); }
+.guess-who-content .popup-header h2 { color:#fff; text-shadow:0 2px 12px rgba(0,0,0,0.22); }
+.guess-who-content .close-btn { color:#F5DEFF; }
+.guess-who-scroll { position:relative; overflow-y:auto; height:calc(85vh - 56px); padding:16px; background:radial-gradient(circle at 12% 8%,rgba(255,207,103,0.22),transparent 28%),radial-gradient(circle at 92% 38%,rgba(243,145,255,0.22),transparent 30%); }
+.guess-who-scroll::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:0.26; background-image:radial-gradient(#fff 1px,transparent 1.5px); background-size:28px 28px; }
+.guess-who-scroll > section { position:relative; z-index:1; }
+.guess-who-intro { text-align:center; padding:18px 8px 12px; color:#fff; }
+.guess-who-stage { position:relative; width:124px; height:96px; margin:0 auto 7px; display:grid; place-items:center; }
+.guess-who-orbit { position:relative; z-index:1; width:76px; height:76px; border-radius:26px; display:grid; place-items:center; font-size:2.55rem; background:linear-gradient(135deg,#FFD76A,#FF9E5C 45%,#E759B4); box-shadow:0 0 0 8px rgba(255,255,255,0.11),0 14px 32px rgba(21,7,51,0.46); animation:guessOrbit 2.6s ease-in-out infinite; }
+.guess-who-stage::before { content:''; position:absolute; width:116px; height:50px; border:2px solid rgba(255,223,121,0.8); border-radius:50%; transform:rotate(-18deg); box-shadow:0 0 20px rgba(255,218,112,0.45); }
+.guess-who-spark { position:absolute; color:#FFE987; font-size:1.55rem; text-shadow:0 0 12px rgba(255,255,255,0.9); animation:guessSpark 1.8s ease-in-out infinite; }
+.spark-one { left:3px; top:10px; }.spark-two { right:0; bottom:12px; animation-delay:-0.7s; }
+@keyframes guessOrbit { 50%{transform:translateY(-7px) rotate(8deg);box-shadow:0 0 0 12px rgba(255,255,255,0.08),0 18px 35px rgba(21,7,51,0.48);} }
+@keyframes guessSpark { 50%{transform:scale(1.28) rotate(18deg);opacity:0.62;} }
+.guess-who-kicker { display:inline-block; margin:0 0 6px; padding:5px 10px; border:1px solid rgba(255,237,159,0.55); border-radius:50px; background:rgba(31,12,63,0.35); color:#FFEFAA; font-size:0.61rem; font-weight:900; letter-spacing:0.11em; }
+.guess-who-title { color:#fff; font-size:2.25rem; font-weight:900; letter-spacing:-0.06em; text-shadow:0 3px 18px rgba(12,4,35,0.42); }
+.guess-who-intro h3 { margin:4px 0 12px; color:#FFEFAA; font-size:1.08rem; }
+.guess-who-intro p { margin:0; color:#F1E7FF; line-height:1.65; font-size:0.88rem; }
+.guess-who-intro ul { display:block; margin:18px 0; padding:13px 18px 13px 34px; text-align:left; border:1px solid rgba(255,255,255,0.22); border-radius:var(--r-md); background:rgba(255,255,255,0.13); color:#FBF6FF; font-size:0.76rem; line-height:1.9; box-shadow:inset 0 1px rgba(255,255,255,0.18); }
 .guess-primary-btn,.guess-secondary-btn { border:none; border-radius:var(--r-md); padding:13px 16px; font-weight:800; cursor:pointer; font-size:0.9rem; }
-.guess-primary-btn { width:100%; color:#fff; background:linear-gradient(135deg,#9574D1,#7157AD); box-shadow:0 5px 14px rgba(113,87,173,0.28); }
-.guess-secondary-btn { background:#F0EBFC; color:#7157AD; }
-.guess-save-status { text-align:center; color:#7157AD; font-size:0.74rem; font-weight:700; margin:0 0 10px; }
-.guess-progress { margin-bottom:12px; padding:10px 12px; border-radius:var(--r-md); background:#F5F0FF; color:#7157AD; font-size:0.8rem; font-weight:800; }
+.guess-primary-btn { width:100%; color:#422052; background:linear-gradient(135deg,#FFE878,#FFB860 48%,#FF83C1); box-shadow:0 8px 20px rgba(14,4,40,0.34),inset 0 1px rgba(255,255,255,0.62); }
+.guess-secondary-btn { background:rgba(255,255,255,0.9); color:#5E3D91; }
+.guess-save-status { text-align:center; color:#F5E9FF; font-size:0.74rem; font-weight:700; margin:0 0 10px; }
+.guess-progress { margin-bottom:12px; padding:11px 13px; border:1px solid rgba(255,236,143,0.42); border-radius:var(--r-md); background:linear-gradient(100deg,rgba(255,219,113,0.24),rgba(255,255,255,0.16)); color:#fff; font-size:0.8rem; font-weight:800; box-shadow:inset 0 1px rgba(255,255,255,0.18); }
 .guess-who-cards { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
-.guess-card { padding:14px; border:1.5px solid #E2D8F5; border-radius:var(--r-md); background:rgba(255,255,255,0.86); }
-.guess-card h4 { margin:0 0 7px; font-size:1rem; color:#5E478F; }
-.guess-hints { color:var(--text-dim); font-size:0.76rem; line-height:1.65; }
-.guess-select { width:100%; margin-top:10px; padding:10px; border:1.5px solid #D8CBEF; border-radius:var(--r-sm); background:#fff; color:var(--text); font-weight:700; }
-.guess-history-btn { margin-top:8px; border:none; background:none; color:#8C70BF; font-size:0.74rem; font-weight:700; cursor:pointer; }
-.guess-history { margin:0 0 12px; padding:12px; border-radius:var(--r-md); background:#F8F5FE; color:var(--text-muted); font-size:0.78rem; line-height:1.7; }
-.guess-history strong { color:#7157AD; }
-.guess-section-title { margin:4px 0 12px; color:#5E478F; font-size:1rem; }
+.guess-card { padding:14px; border:1px solid rgba(255,255,255,0.42); border-radius:var(--r-md); background:linear-gradient(135deg,rgba(255,255,255,0.96),rgba(249,238,255,0.9)); box-shadow:0 8px 16px rgba(28,11,66,0.20); }
+.guess-card h4 { margin:0 0 7px; font-size:1rem; color:#5B3285; }
+.guess-hints { color:#8B6DA9; font-size:0.76rem; line-height:1.65; }
+.guess-select { width:100%; margin-top:10px; padding:10px; border:1.5px solid #C5A2E8; border-radius:var(--r-sm); background:#fff; color:var(--text); font-weight:700; }
+.guess-history-btn { margin-top:8px; border:none; background:none; color:#8057B2; font-size:0.74rem; font-weight:700; cursor:pointer; }
+.guess-history { margin:0 0 12px; padding:12px; border:1px solid rgba(255,255,255,0.32); border-radius:var(--r-md); background:rgba(36,15,74,0.5); color:#FBF5FF; font-size:0.78rem; line-height:1.7; }
+.guess-history strong { color:#FFE98B; }
+.guess-section-title { margin:4px 0 12px; color:#FFF0AE; font-size:1rem; }
 .guess-review-list { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
-.guess-review-item { padding:10px 12px; border-radius:var(--r-sm); background:#F8F5FE; font-size:0.8rem; color:var(--text-muted); }
+.guess-review-item { padding:10px 12px; border:1px solid rgba(255,255,255,0.28); border-radius:var(--r-sm); background:rgba(255,255,255,0.91); font-size:0.8rem; color:var(--text-muted); }
 .guess-review-item b { color:#5E478F; }
 .guess-review-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.guess-who-empty { padding:34px 18px; text-align:center; border-radius:var(--r-md); background:#F8F5FE; color:var(--text-muted); font-size:0.88rem; line-height:1.8; }
-.guess-result-score { text-align:center; margin:8px 0 16px; padding:18px; border-radius:var(--r-md); background:linear-gradient(135deg,#F2EBFF,#FFF); color:#7157AD; font-size:1rem; font-weight:800; }
+.guess-who-empty { padding:34px 18px; text-align:center; border:1px solid rgba(255,255,255,0.25); border-radius:var(--r-md); background:rgba(255,255,255,0.16); color:#fff; font-size:0.88rem; line-height:1.8; }
+.guess-result-score { text-align:center; margin:8px 0 16px; padding:18px; border:1px solid rgba(255,229,126,0.56); border-radius:var(--r-md); background:linear-gradient(135deg,#FFF4B6,#FFBB76 52%,#E978C1); color:#5B286E; font-size:1rem; font-weight:800; box-shadow:0 10px 22px rgba(20,6,52,0.28); }
 .guess-result-score b { display:block; font-size:2.2rem; line-height:1.15; }
-.guess-result-item { padding:11px 12px; margin-bottom:7px; border-radius:var(--r-sm); font-size:0.8rem; line-height:1.55; background:#F8F5FE; color:var(--text-muted); }
+.guess-result-item { padding:11px 12px; margin-bottom:7px; border:1px solid rgba(255,255,255,0.32); border-radius:var(--r-sm); font-size:0.8rem; line-height:1.55; background:rgba(255,255,255,0.92); color:var(--text-muted); }
 .guess-result-item.correct { background:#EAF8F1; color:#2A8A62; }
-.guess-admin-box { margin-top:16px; padding:12px; border:1.5px dashed #D1BCE9; border-radius:var(--r-md); background:#FCFAFF; }
+.guess-admin-box { margin-top:16px; padding:12px; border:1.5px dashed rgba(255,234,140,0.7); border-radius:var(--r-md); background:rgba(37,16,75,0.46); color:#fff; }
+@media (prefers-reduced-motion:reduce) { .guess-who-orbit,.guess-who-spark { animation:none; } }
 .mission-history { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
 .mission-history-label { font-size:0.74rem; font-weight:700; color:var(--text-dim); margin-right:2px; }
 .mission-history-btn { border:1px solid var(--rose-border); border-radius:50px; background:var(--bg); color:var(--text-dim); padding:5px 10px; font-size:0.72rem; font-weight:700; cursor:pointer; }
