@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.9 — 중고등부 전용 (S1 기반)
+// v1.5.0 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -48,13 +48,26 @@ if ('serviceWorker' in navigator) {
 // ── PWA 설치 배너 ──
 let deferredPrompt;
 const installBanner = document.getElementById('install-banner');
+function showInstallGuide() {
+    if (!installBanner || isInstalledApp()) return;
+    const installBtn = document.getElementById('btn-install-app');
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+    if (installBtn) installBtn.textContent = deferredPrompt ? '설치' : (isIOS ? '설치 방법' : '앱으로 설치');
+    installBanner.classList.add('show');
+}
 window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); deferredPrompt = e;
-    setTimeout(() => { if (installBanner) installBanner.classList.add('show'); }, 5000);
+    e.preventDefault(); deferredPrompt = e; showInstallGuide();
 });
 document.getElementById('btn-install-app').addEventListener('click', () => {
-    if (installBanner) installBanner.classList.remove('show');
-    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); }
+    if (deferredPrompt) {
+        installBanner.classList.remove('show');
+        deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+        return;
+    }
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+    alert(isIOS
+        ? 'Safari 하단의 공유 버튼(□↑)을 누른 뒤 “홈 화면에 추가”를 선택해 주세요.'
+        : 'Chrome 메뉴(⋮)에서 “앱 설치” 또는 “홈 화면에 추가”를 선택해 주세요.');
 });
 document.getElementById('btn-close-install').addEventListener('click', () => {
     if (installBanner) installBanner.classList.remove('show');
@@ -63,6 +76,7 @@ window.addEventListener('appinstalled', () => {
     localStorage.removeItem('notificationOnboardingDismissed');
     setTimeout(showNotificationOnboarding, 500);
 });
+window.addEventListener('load', () => setTimeout(showInstallGuide, 2200));
 
 // ── UI 핸들러 ──
 let isFabOpen = false;
@@ -285,7 +299,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.9';
+const CURRENT_VERSION = '1.5.0';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1230,7 +1244,7 @@ function assignMissionAlias() {
 let _guessWhoState = { aliases: [], candidates: [], answers: {} };
 let _guessWhoHistoryAlias = '';
 const GUESS_WHO_OPENING_STORAGE_KEY = 'guessWhoOpeningSeen';
-function isGuessWhoTestMode() { return getMissionKstDateStr() < MISSION_SCHEDULE[0].date; }
+function isGuessWhoTestMode() { return false; }
 function isGuessWhoOpen() {
     return isGuessWhoTestMode() || getMissionKstDateStr() > MISSION_SCHEDULE[MISSION_SCHEDULE.length - 1].date;
 }

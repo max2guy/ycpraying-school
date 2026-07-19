@@ -217,6 +217,20 @@ exports.drawRandomMissionWinner = functions
         return null;
     });
 
+/* ── 7. Guess Who 공개 알림: 7월 27일 오전 6시 ── */
+exports.announceGuessWhoOpening = functions
+    .region('asia-northeast3')
+    .pubsub.schedule('0 6 * * *')
+    .timeZone('Asia/Seoul')
+    .onRun(async () => {
+        if (getKstDateString() !== '2026-07-27') return null;
+        const openedRef = admin.database().ref('guessWhoGame/openingAnnouncedAt');
+        const claimed = await openedRef.transaction(current => current === null ? admin.database.ServerValue.TIMESTAMP : undefined);
+        if (!claimed.committed) return null;
+        await sendPush(await getAllTokens(null), '🕵️ Guess Who? 게임 오픈!', '익명의 말씀 친구를 찾아라! 보너스 게임이 지금 열렸어요.', { type: 'guess_who_open' });
+        return null;
+    });
+
 /* ── Guess Who? 정답 공개 및 서버 채점 ── */
 exports.revealGuessWhoResults = functions
     .region('asia-northeast3')
