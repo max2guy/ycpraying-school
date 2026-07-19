@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.1 — 중고등부 전용 (S1 기반)
+// v1.5.2 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -48,11 +48,17 @@ if ('serviceWorker' in navigator) {
 // ── PWA 설치 배너 ──
 let deferredPrompt;
 const installBanner = document.getElementById('install-banner');
+function getInstallBrowser() {
+    const ua = navigator.userAgent;
+    if (/SamsungBrowser/i.test(ua)) return 'samsung';
+    if (/iP(ad|hone|od)/.test(ua)) return 'ios';
+    return 'other';
+}
 function showInstallGuide() {
     if (!installBanner || isInstalledApp()) return;
     const installBtn = document.getElementById('btn-install-app');
-    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
-    if (installBtn) installBtn.textContent = deferredPrompt ? '설치' : (isIOS ? '설치 방법' : '앱으로 설치');
+    const browser = getInstallBrowser();
+    if (installBtn) installBtn.textContent = deferredPrompt ? '설치' : (browser === 'ios' || browser === 'samsung' ? '설치 방법' : '앱으로 설치');
     installBanner.classList.add('show');
 }
 window.addEventListener('beforeinstallprompt', e => {
@@ -64,10 +70,14 @@ document.getElementById('btn-install-app').addEventListener('click', () => {
         deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
         return;
     }
-    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
-    alert(isIOS
-        ? 'Safari 하단의 공유 버튼(□↑)을 누른 뒤 “홈 화면에 추가”를 선택해 주세요.'
-        : 'Chrome 메뉴(⋮)에서 “앱 설치” 또는 “홈 화면에 추가”를 선택해 주세요.');
+    const browser = getInstallBrowser();
+    if (browser === 'samsung') {
+        alert('삼성 인터넷 메뉴(☰)에서 “현재 페이지 추가” → “홈 화면”을 선택해 주세요.\n\n홈 화면에 추가하면 독립된 PWA 앱으로 설치됩니다.');
+    } else if (browser === 'ios') {
+        alert('Safari 하단의 공유 버튼(□↑)을 누른 뒤 “홈 화면에 추가”를 선택해 주세요.');
+    } else {
+        alert('Chrome 메뉴(⋮)에서 “앱 설치” 또는 “홈 화면에 추가”를 선택해 주세요.');
+    }
 });
 document.getElementById('btn-close-install').addEventListener('click', () => {
     if (installBanner) installBanner.classList.remove('show');
@@ -299,7 +309,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.1';
+const CURRENT_VERSION = '1.5.2';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -350,7 +360,7 @@ let _fcmMsgInitialized = false;
 const NOTIFICATION_ONBOARDING_DISMISSED_KEY = 'notificationOnboardingDismissed';
 
 function isInstalledApp() {
-    return window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
+    return window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone || document.referrer.startsWith('android-app://');
 }
 function showNotificationOnboarding() {
     if (!isInstalledApp() || !('Notification' in window) || Notification.permission !== 'default') return;
