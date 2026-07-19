@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.4.8 — 중고등부 전용 (S1 기반)
+// v1.4.9 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -285,7 +285,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.4.8';
+const CURRENT_VERSION = '1.4.9';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -2372,7 +2372,14 @@ function closeLightbox() {
 // ── 게임 루프 (노드 위치 + 캔버스 파티클, 60fps 통합) ──
 let rafPaused = false;
 
-document.addEventListener('visibilitychange', () => { rafPaused = document.hidden; });
+function pauseMusicForBackground() {
+    if (isMusicPlaying && player && typeof player.pauseVideo === 'function') player.pauseVideo();
+}
+document.addEventListener('visibilitychange', () => {
+    rafPaused = document.hidden;
+    if (document.hidden) pauseMusicForBackground();
+});
+window.addEventListener('pagehide', pauseMusicForBackground);
 
 function gameLoop(time) {
     requestAnimationFrame(gameLoop);
