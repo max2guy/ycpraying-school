@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.2 — 중고등부 전용 (S1 기반)
+// v1.5.3 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -208,8 +208,6 @@ function getMissionKstDateStr() {
     return kst.toISOString().slice(0, 10);
 }
 function isMissionSubmitWindowOpen() {
-    const testDay = Number(new URLSearchParams(location.search).get('missionTest'));
-    if (testDay >= 1 && testDay <= 7) return true;
     const missionDate = getMissionKstDateStr();
     if (missionDate < MISSION_SCHEDULE[0].date) return false;
     return missionDate >= MISSION_SCHEDULE[0].date && missionDate <= MISSION_SCHEDULE[5].date;
@@ -309,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.2';
+const CURRENT_VERSION = '1.5.3';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
