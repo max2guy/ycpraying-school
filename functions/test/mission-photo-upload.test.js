@@ -34,3 +34,9 @@ test('random gift winners receive a dice badge in the completed member list', ()
   assert.match(script, /mission-random-gift-badge/);
   assert.match(script, /🎲/);
 });
+
+test('gift banner shows the random winner below the first-place winner', () => {
+  assert.match(script, /_updateGiftBanner\(completions\._firstPlace, completions\._randomWinner\)/);
+  assert.match(script, /mission-gift-random-winner/);
+  assert.match(html, /id="mission-gift-random-line"/);
+});

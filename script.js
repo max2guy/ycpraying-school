@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.12 — 중고등부 전용 (S1 기반)
+// v1.5.13 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -307,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.12';
+const CURRENT_VERSION = '1.5.13';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1776,7 +1776,7 @@ function editMissionSubmission() {
 
 function _renderMissionMembers(completions) {
     _missionCompletionsCache = completions;
-    _updateGiftBanner(completions._firstPlace);
+    _updateGiftBanner(completions._firstPlace, completions._randomWinner);
     const grid = document.getElementById('mission-members-grid');
     if (!grid) return;
     const entries = Object.entries(completions).filter(([uid]) => uid !== '_firstPlace' && uid !== '_randomWinner');
@@ -1800,15 +1800,19 @@ function _renderMissionMembers(completions) {
         }).join('');
 }
 
-function _updateGiftBanner(firstPlace) {
+function _updateGiftBanner(firstPlace, randomWinner) {
     const banner = document.getElementById('mission-gift-banner');
     if (!banner) return;
-    if (firstPlace && firstPlace.memberName) {
+    const hasFirstPlace = firstPlace && firstPlace.memberName;
+    const hasRandomWinner = randomWinner && randomWinner.memberName;
+    document.getElementById('mission-gift-first-line').style.display = hasFirstPlace ? '' : 'none';
+    document.getElementById('mission-gift-random-line').style.display = hasRandomWinner ? '' : 'none';
+    document.getElementById('mission-gift-random-note').style.display = hasRandomWinner ? 'none' : '';
+    if (hasFirstPlace) {
         document.getElementById('mission-gift-winner').textContent = formatEventDisplayName(firstPlace.memberName);
-        banner.style.display = 'flex';
-    } else {
-        banner.style.display = 'none';
     }
+    if (hasRandomWinner) document.getElementById('mission-gift-random-winner').textContent = formatEventDisplayName(randomWinner.memberName);
+    banner.style.display = hasFirstPlace || hasRandomWinner ? 'flex' : 'none';
 }
 
 function adminDeleteMissionSubmission(uid) {
