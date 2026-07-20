@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin     = require('firebase-admin');
 const { summarizePushResponse } = require('./push-result');
 const { getIncompleteMissionTokens, isMissionReminderDate, pickRandomMissionWinner } = require('./mission-reminder');
+const { uniqueRecipientTokens } = require('./fcm-token-utils');
 admin.initializeApp();
 
 const APP_URL = 'https://ycpraying-school.web.app/';
@@ -9,13 +10,12 @@ const APP_URL = 'https://ycpraying-school.web.app/';
 /* ── 전체 FCM 토큰 수집 (특정 senderId 제외 가능) ── */
 async function getAllTokens(excludeSessionId) {
     const snap = await admin.database().ref('fcmTokens').once('value');
-    const result = [];
+    const records = [];
     snap.forEach(child => {
-        if (child.key === excludeSessionId) return;
         const d = child.val();
-        if (d && d.token) result.push({ token: d.token, sessionId: child.key });
+        if (d && d.token) records.push({ token: d.token, sessionId: child.key, updatedAt: d.updatedAt });
     });
-    return result;
+    return uniqueRecipientTokens(records, excludeSessionId);
 }
 
 /* ── 멀티캐스트 발송 + 만료 토큰 자동 정리 ── */
@@ -52,7 +52,9 @@ async function sendPush(tokenDatas, title, body, extraData = {}) {
             const code = r.error.code;
             if (code === 'messaging/invalid-registration-token' ||
                 code === 'messaging/registration-token-not-registered') {
-                removes.push(admin.database().ref(`fcmTokens/${tokenDatas[i].sessionId}`).remove());
+                (tokenDatas[i].sessionIds || [tokenDatas[i].sessionId]).forEach(sessionId => {
+                    removes.push(admin.database().ref(`fcmTokens/${sessionId}`).remove());
+                });
             }
         }
     });
