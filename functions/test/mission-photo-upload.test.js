@@ -19,3 +19,9 @@ test('each mission range has a short background explanation', () => {
   assert.equal(backgrounds.length, 7);
   assert.match(script, /function toggleMissionBackground\(\)/);
 });
+
+test('copying instructions explicitly require every verse in the assigned range', () => {
+  assert.match(script, /1절부터 13절까지, 총 13절 전부/);
+  assert.equal(/13절을 손으로 직접 필사/.test(script), false);
+  assert.equal((script.match(/전부를 손으로 필사/g) || []).length, 6);
+});
