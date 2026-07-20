@@ -168,7 +168,7 @@ exports.announceDailyMission = functions
         await sendPush(
             await getAllTokens(null),
             `📖 ${mission.day} 일일미션이 시작됐어요`,
-            `오늘의 말씀: ${mission.range} · 기도와 말씀 인증을 완료해 주세요!`,
+            mission.message || `오늘의 말씀: ${mission.range} · 기도와 말씀 인증을 완료해 주세요!`,
             { type: 'daily_mission_start' }
         );
         return null;
