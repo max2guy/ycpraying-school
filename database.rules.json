@@ -3,7 +3,16 @@
     "members": {
       ".read": true,
       "$memberId": {
-        ".write": "auth != null && (auth.token.email === 'admin@church.com' || (!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
+        ".write": "auth != null && (auth.token.email === 'admin@church.com' || (!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))",
+        "prayers": {
+          "$prayerIndex": {
+            "amens": {
+              "$amenUid": {
+                ".write": "auth != null && auth.uid === $amenUid && (newData.val() === true || !newData.exists())"
+              }
+            }
+          }
+        }
       }
     },
     "presence": {
