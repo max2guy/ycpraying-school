@@ -21,7 +21,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js" defer></script>
-    <script src="script.js?v=142" defer></script>
+    <script src="script.js?v=143" defer></script>
 </head>
 <body id="body">
 
@@ -188,6 +188,8 @@
                     <div class="mission-scripture-label" id="mission-scripture-label">오늘의 필사 구절</div>
                     <div class="mission-scripture-range" id="mission-scripture-range">사도행전 2:1-13</div>
                     <div class="mission-scripture-desc" id="mission-scripture-desc"></div>
+                    <button type="button" class="mission-background-toggle" id="mission-background-toggle" onclick="toggleMissionBackground()">📖 말씀 배경 보기</button>
+                    <div class="mission-background" id="mission-background" style="display:none"></div>
                 </div>
                 <!-- 제출 시간 제한 안내 -->
                 <div class="mission-time-blocked" id="mission-time-blocked" style="display:none">
@@ -206,23 +208,16 @@
                         <span>필사 인증 사진 업로드</span>
                         <span class="mission-upload-hint">탭하여 카메라 열기</span>
                     </div>
-                    <div class="mission-photo-preview" id="mission-photo-preview" style="display:none">
-                        <img id="mission-preview-img" src="" alt="인증 사진 미리보기" onclick="openLightbox(this.src)">
-                        <div class="mission-photo-actions">
-                            <button class="mission-change-btn" onclick="rotateMissionPhoto(-90)">↺ 왼쪽 회전</button>
-                            <button class="mission-change-btn" onclick="rotateMissionPhoto(90)">↻ 오른쪽 회전</button>
-                            <button class="mission-change-btn" onclick="document.getElementById('mission-file-input').click()">📷 사진 변경</button>
-                        </div>
-                    </div>
+                    <div class="mission-photo-preview" id="mission-photo-preview" style="display:none"></div>
                     <input type="file" id="mission-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleMissionPhotoSelect(event)">
-                    <input type="file" id="mission-gallery-input" accept="image/*" style="display:none" onchange="handleMissionPhotoSelect(event)">
+                    <input type="file" id="mission-gallery-input" accept="image/*" multiple style="display:none" onchange="handleMissionPhotoSelect(event)">
                     <textarea id="mission-prayer-input" class="simple-modal-input" rows="3" maxlength="500" placeholder="오늘의 기도문을 적어주세요 🙏" style="margin-top:10px"></textarea>
                     <button class="mission-submit-btn" id="mission-submit-btn" onclick="submitMission()">✅ 인증 제출하기</button>
                 </div>
                 <!-- 완료 상태 -->
                 <div class="mission-done-section" id="mission-done-section" style="display:none">
                     <div class="mission-done-badge">🎉 오늘 미션 완료!</div>
-                    <img id="mission-done-img" src="" alt="제출한 인증 사진" class="mission-done-photo" onclick="openLightbox(this.src, this.dataset.caption)">
+                    <div id="mission-done-photos" class="mission-done-photo-grid"></div>
                     <button class="mission-edit-btn" onclick="editMissionSubmission()">✏️ 다시 제출하기</button>
                 </div>
                 <!-- 멤버 완료 현황 -->
@@ -378,7 +373,7 @@
                     <span class="setting-text">시크릿기프트 당첨자 목록</span>
                 </button>
             </div>
-            <div class="settings-version">✨ v1.5.4 | 연천장로교회 중고등부 ✨</div>
+            <div class="settings-version">✨ v1.5.5 | 연천장로교회 중고등부 ✨</div>
         </div>
     </div>
 

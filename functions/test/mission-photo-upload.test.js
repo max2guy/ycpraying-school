@@ -1,0 +1,21 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..', '..');
+const script = fs.readFileSync(path.join(root, 'script.js'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+
+test('mission upload accepts up to three photos and preserves a legacy cover photo', () => {
+  assert.match(script, /const MISSION_PHOTO_LIMIT = 3/);
+  assert.match(html, /id="mission-gallery-input" accept="image\/\*" multiple/);
+  assert.match(script, /photoData: _missionPhotoDataList\[0\]/);
+  assert.match(script, /photoDataList: _missionPhotoDataList/);
+});
+
+test('each mission range has a short background explanation', () => {
+  const backgrounds = script.match(/background:'/g) || [];
+  assert.equal(backgrounds.length, 7);
+  assert.match(script, /function toggleMissionBackground\(\)/);
+});

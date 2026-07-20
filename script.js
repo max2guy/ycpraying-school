@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.4 — 중고등부 전용 (S1 기반)
+// v1.5.5 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -191,13 +191,13 @@ function watchFinishedEventNames() {
 
 // ── 일일미션 스케줄 (수련회 사전 프로그램 7/20-7/26) ──
 const MISSION_SCHEDULE = [
-    { date:'2026-07-20', day:1, label:'1일차', range:'사도행전 2:1-13', desc:'성령강림과 방언 — 13절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-21', day:2, label:'2일차', range:'사도행전 2:14-21', desc:'베드로의 설교 ① 요엘의 예언 — 8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-22', day:3, label:'3일차', range:'사도행전 2:22-28', desc:'베드로의 설교 ② 그리스도의 죽음과 부활 — 7절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-23', day:4, label:'4일차', range:'사도행전 2:29-36', desc:'베드로의 설교 ③ 주와 그리스도 — 8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-24', day:5, label:'5일차', range:'사도행전 2:37-41', desc:'회개와 세례, 삼천 명의 회심 — 5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-25', day:6, label:'6일차', range:'사도행전 2:42-47', desc:'초대교회의 공동체 생활 — 6절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️' },
-    { date:'2026-07-26', day:7, label:'주일',  range:'사도행전 2:17 암송', desc:'"하나님이 말씀하시기를 말세에 내가 내 영을 모든 육체에 부어 주리니 너희의 자녀들은 예언할 것이요 너희의 젊은이들은 환상을 보고 너희의 늙은이들은 꿈을 꾸리라"', noSubmit:true },
+    { date:'2026-07-20', day:1, label:'1일차', range:'사도행전 2:1-13', desc:'성령강림과 방언 — 13절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️', background:'오순절에 성령께서 제자들에게 임하셨고, 여러 나라에서 온 사람들이 각자의 언어로 하나님의 큰일을 듣게 된 장면입니다.' },
+    { date:'2026-07-21', day:2, label:'2일차', range:'사도행전 2:14-21', desc:'베드로의 설교 ① 요엘의 예언 — 8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️', background:'베드로는 이 사건이 혼란이 아니라, 요엘을 통해 약속하신 성령의 역사라고 설명합니다.' },
+    { date:'2026-07-22', day:3, label:'3일차', range:'사도행전 2:22-28', desc:'베드로의 설교 ② 그리스도의 죽음과 부활 — 7절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️', background:'베드로는 예수님의 십자가와 부활이 하나님의 뜻 가운데 이루어진 구원의 사건임을 선포합니다.' },
+    { date:'2026-07-23', day:4, label:'4일차', range:'사도행전 2:29-36', desc:'베드로의 설교 ③ 주와 그리스도 — 8절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️', background:'시편의 말씀을 통해, 다윗이 기다렸던 메시아가 부활하신 예수님이며 예수님이 주와 그리스도이심을 증언합니다.' },
+    { date:'2026-07-24', day:5, label:'5일차', range:'사도행전 2:37-41', desc:'회개와 세례, 삼천 명의 회심 — 5절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️', background:'말씀을 들은 사람들이 마음에 찔려 회개하고 세례를 받으며 믿음의 공동체에 참여하게 됩니다.' },
+    { date:'2026-07-25', day:6, label:'6일차', range:'사도행전 2:42-47', desc:'초대교회의 공동체 생활 — 6절을 손으로 직접 필사한 후 사진으로 인증하세요! ✍️', background:'초대교회 성도들은 말씀을 배우고 함께 기도하며 나누고 섬기는 삶으로 하나님께 기쁨을 드렸습니다.' },
+    { date:'2026-07-26', day:7, label:'주일',  range:'사도행전 2:17 암송', desc:'"하나님이 말씀하시기를 말세에 내가 내 영을 모든 육체에 부어 주리니 너희의 자녀들은 예언할 것이요 너희의 젊은이들은 환상을 보고 너희의 늙은이들은 꿈을 꾸리라"', background:'한 주 동안 필사한 말씀을 돌아보며, 성령의 역사와 예수 그리스도의 복음을 마음에 새기는 시간입니다.', noSubmit:true },
 ];
 
 const MISSION_RESET_HOUR = 6;
@@ -307,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.4';
+const CURRENT_VERSION = '1.5.5';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1181,7 +1181,8 @@ window.addEventListener("resize", () => {
 function toggleCampPopup()  { document.getElementById('camp-popup').classList.toggle('active'); }
 
 // ── 일일미션 팝업 ──
-let _missionPhotoData = null;
+const MISSION_PHOTO_LIMIT = 3;
+let _missionPhotoDataList = [];
 let _missionPopupListener = null;
 let _missionCompletionsCache = {};
 let _missionSubmittedPrayerText = '';
@@ -1320,7 +1321,7 @@ function buildGuessWhoAliases(missions) {
             if (!alias) return;
             if (!aliases.has(alias)) aliases.set(alias, { alias, records: [], firstCount: 0 });
             const item = aliases.get(alias);
-            item.records.push({ day: mission.day, timestamp: data.timestamp || 0, photoData: data.photoData || '', prayerText: data.prayerText || '' });
+            item.records.push({ day: mission.day, timestamp: data.timestamp || 0, photoData: data.photoData || '', photoDataList: getMissionPhotos(data), prayerText: data.prayerText || '' });
             if (dayData._firstPlace && dayData._firstPlace.memberName === alias) item.firstCount++;
         });
     });
@@ -1373,7 +1374,7 @@ function renderGuessWhoCards() {
         const options = [`<option value="">사람을 선택하세요</option>`, `<option value="unknown"${value === 'unknown' ? ' selected' : ''}>모르겠어요</option>`]
             .concat(candidates.map(candidate => `<option value="${escHtml(candidate.id)}"${value === candidate.id ? ' selected' : ''}${selectedIds.has(candidate.id) && value !== candidate.id ? ' disabled' : ''}>${escHtml(candidate.name)}</option>`));
         const history = _guessWhoHistoryAlias === item.alias
-            ? `<div class="guess-inline-history"><strong>${escHtml(item.alias)}의 인증 기록</strong>${item.records.map(record => `<div class="guess-history-record"><div>${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}</div>${record.photoData ? `<button class="guess-history-photo" data-photo="${escHtml(record.photoData)}" data-prayer="${escHtml(record.prayerText || '')}"><img src="${escHtml(record.photoData)}" alt="${record.day}일차 인증 사진"></button>` : '<div class="guess-history-no-photo">인증 사진 없음</div>'}<p>🙏 ${escHtml(record.prayerText || '작성한 기도문이 없습니다.')}</p></div>`).join('')}</div>`
+            ? `<div class="guess-inline-history"><strong>${escHtml(item.alias)}의 인증 기록</strong>${item.records.map(record => `<div class="guess-history-record"><div>${record.day}일차 · ${record.timestamp ? new Date(record.timestamp).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }) : '시간 없음'}</div>${record.photoData ? `<button class="guess-history-photo" data-photo="${escHtml(record.photoData)}" data-prayer="${escHtml(record.prayerText || '')}"><img src="${escHtml(record.photoData)}" alt="${record.day}일차 인증 사진"></button>` : '<div class="guess-history-no-photo">인증 사진 없음</div>'}${record.photoDataList.length > 1 ? `<div class="guess-history-no-photo">인증 사진 ${record.photoDataList.length}장</div>` : ''}<p>🙏 ${escHtml(record.prayerText || '작성한 기도문이 없습니다.')}</p></div>`).join('')}</div>`
             : '';
         return `<article class="guess-card"><h4>🌱 ${escHtml(item.alias)}</h4><div class="guess-hints">${item.records.length}일 인증 · 평균 ${formatGuessWhoTime(item.averageTime)} · 첫 인증 ${item.firstCount}회</div><select class="guess-select" data-alias="${escHtml(item.alias)}">${options.join('')}</select><button class="guess-history-btn" data-history="${escHtml(item.alias)}">지난 인증 기록 보기</button>${history}</article>`;
     }).join('');
@@ -1454,6 +1455,9 @@ function openMissionPopup(selectedMission) {
     document.getElementById('mission-scripture-range').textContent = mission.range;
     document.getElementById('mission-scripture-desc').textContent = mission.desc;
     document.getElementById('mission-scripture-label').textContent = mission.noSubmit ? '오늘의 암송 구절' : (isPastMission ? '지난 필사 구절' : '오늘의 필사 구절');
+    document.getElementById('mission-background').textContent = mission.background || '';
+    document.getElementById('mission-background').style.display = 'none';
+    document.getElementById('mission-background-toggle').textContent = '📖 말씀 배경 보기';
 
     const historyEl = document.getElementById('mission-history');
     const historyMissions = MISSION_SCHEDULE.filter(m => m.date < currentMission.date);
@@ -1492,7 +1496,7 @@ function openMissionPopup(selectedMission) {
     document.querySelector('.mission-members-title').textContent = '🙏 오늘 완료한 멤버';
 
     // 업로드 상태 초기화
-    _missionPhotoData = null;
+    _missionPhotoDataList = [];
     document.getElementById('mission-file-input').value = '';
     document.getElementById('mission-gallery-input').value = '';
     document.getElementById('mission-upload-placeholder').style.display = 'flex';
@@ -1515,7 +1519,7 @@ function openMissionPopup(selectedMission) {
         if (snap.exists()) {
             const v = snap.val();
             _missionSubmittedPrayerText = v.prayerText || '';
-            _showMissionCompleted(v.photoData, v.prayerText);
+            _showMissionCompleted(getMissionPhotos(v), v.prayerText);
         }
     });
 
@@ -1533,18 +1537,36 @@ function closeMissionPopup() {
     if (_missionPopupListener) { _missionPopupListener.ref.off('value', _missionPopupListener.cb); _missionPopupListener = null; }
 }
 
-function _showMissionCompleted(photoData, prayerText) {
+function toggleMissionBackground() {
+    const content = document.getElementById('mission-background');
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : 'block';
+    document.getElementById('mission-background-toggle').textContent = isOpen ? '📖 말씀 배경 보기' : '📖 말씀 배경 닫기';
+}
+
+function getMissionPhotos(data) {
+    if (Array.isArray(data && data.photoDataList) && data.photoDataList.length) return data.photoDataList.filter(Boolean);
+    return data && data.photoData ? [data.photoData] : [];
+}
+
+function _showMissionCompleted(photoDataList, prayerText) {
     document.getElementById('mission-upload-section').style.display = 'none';
     document.getElementById('mission-time-blocked').style.display = 'none';
     document.getElementById('mission-done-section').style.display = 'flex';
-    const img = document.getElementById('mission-done-img');
-    if (photoData) img.src = photoData;
-    img.dataset.caption = prayerText || '';
+    const container = document.getElementById('mission-done-photos');
+    container.innerHTML = '';
+    photoDataList.forEach((photoData, index) => {
+        const card = document.createElement('div');
+        card.className = 'mission-photo-card';
+        const img = document.createElement('img');
+        img.src = photoData; img.alt = `제출한 인증 사진 ${index + 1}`;
+        img.onclick = () => openLightbox(photoData, prayerText);
+        card.appendChild(img); container.appendChild(card);
+    });
 }
 
-function handleMissionPhotoSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+function compressMissionPhoto(file) {
+    return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = e => {
@@ -1556,17 +1578,52 @@ function handleMissionPhotoSelect(event) {
             if (w > MAX || h > MAX) { const r = Math.min(MAX/w, MAX/h); w = Math.round(w*r); h = Math.round(h*r); }
             canvas.width = w; canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            _missionPhotoData = canvas.toDataURL('image/jpeg', 0.70);
-            document.getElementById('mission-preview-img').src = _missionPhotoData;
-            document.getElementById('mission-upload-placeholder').style.display = 'none';
-            document.getElementById('mission-photo-preview').style.display = 'flex';
+            resolve(canvas.toDataURL('image/jpeg', 0.70));
         };
+        img.onerror = reject;
         img.src = e.target.result;
     };
+    reader.onerror = reject;
+    });
 }
 
-function rotateMissionPhoto(degrees) {
-    if (!_missionPhotoData) return;
+function handleMissionPhotoSelect(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    const available = MISSION_PHOTO_LIMIT - _missionPhotoDataList.length;
+    if (!files.length || available <= 0) return alert(`인증 사진은 최대 ${MISSION_PHOTO_LIMIT}장까지 올릴 수 있어요.`);
+    if (files.length > available) alert(`사진은 최대 ${MISSION_PHOTO_LIMIT}장까지 올릴 수 있어요. 앞 ${available}장만 추가합니다.`);
+    Promise.all(files.slice(0, available).map(compressMissionPhoto)).then(photos => {
+        _missionPhotoDataList.push(...photos);
+        renderMissionPhotoPreview();
+    }).catch(() => alert('사진을 읽지 못했습니다. 다른 사진으로 다시 시도해주세요.'));
+}
+
+function renderMissionPhotoPreview() {
+    const preview = document.getElementById('mission-photo-preview');
+    const placeholder = document.getElementById('mission-upload-placeholder');
+    preview.innerHTML = '';
+    _missionPhotoDataList.forEach((photoData, index) => {
+        const card = document.createElement('div'); card.className = 'mission-photo-card';
+        const img = document.createElement('img'); img.src = photoData; img.alt = `인증 사진 ${index + 1}`; img.onclick = () => openLightbox(photoData); card.appendChild(img);
+        const actions = document.createElement('div'); actions.className = 'mission-photo-card-actions';
+        actions.innerHTML = `<button type="button" onclick="rotateMissionPhoto(${index}, -90)">↺</button><button type="button" onclick="rotateMissionPhoto(${index}, 90)">↻</button><button type="button" onclick="removeMissionPhoto(${index})">삭제</button>`;
+        card.appendChild(actions); preview.appendChild(card);
+    });
+    if (_missionPhotoDataList.length < MISSION_PHOTO_LIMIT) {
+        const add = document.createElement('button');
+        add.type = 'button'; add.className = 'mission-photo-add';
+        add.textContent = `📷 사진 추가 (${_missionPhotoDataList.length}/${MISSION_PHOTO_LIMIT})`;
+        add.onclick = () => document.getElementById('mission-file-input').click();
+        preview.appendChild(add);
+    }
+    placeholder.style.display = _missionPhotoDataList.length ? 'none' : 'flex';
+    preview.style.display = _missionPhotoDataList.length ? 'grid' : 'none';
+}
+
+function rotateMissionPhoto(index, degrees) {
+    const photoData = _missionPhotoDataList[index];
+    if (!photoData) return;
     const img = new Image();
     img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -1576,15 +1633,20 @@ function rotateMissionPhoto(degrees) {
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(degrees * Math.PI / 180);
         ctx.drawImage(img, -img.width / 2, -img.height / 2);
-        _missionPhotoData = canvas.toDataURL('image/jpeg', 0.70);
-        document.getElementById('mission-preview-img').src = _missionPhotoData;
+        _missionPhotoDataList[index] = canvas.toDataURL('image/jpeg', 0.70);
+        renderMissionPhotoPreview();
     };
-    img.src = _missionPhotoData;
+    img.src = photoData;
+}
+
+function removeMissionPhoto(index) {
+    _missionPhotoDataList.splice(index, 1);
+    renderMissionPhotoPreview();
 }
 
 function submitMission() {
     if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증 가능 시간을 확인해주세요.'); return; }
-    if (!_missionPhotoData) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
+    if (!_missionPhotoDataList.length) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
     const enteredName = document.getElementById('mission-name-input').value.trim();
     if (!enteredName) { alert('✍️ 처음 한 번만 이름을 입력해주세요!'); return; }
     const prayerText = document.getElementById('mission-prayer-input').value.trim();
@@ -1597,7 +1659,8 @@ function submitMission() {
     assignMissionAlias().then(alias => {
         if (!alias) throw new Error('익명 닉네임을 만들 수 없습니다.');
         return missionDateRef.child(mySessionId).set({
-        photoData: _missionPhotoData,
+        photoData: _missionPhotoDataList[0],
+        photoDataList: _missionPhotoDataList,
         timestamp: Date.now(),
         day: mission.day,
             memberName: alias,
@@ -1606,7 +1669,7 @@ function submitMission() {
         }).then(() => {
         ensureMissionMemberNode(alias, prayerText, mission.date);
         _missionSubmittedPrayerText = prayerText;
-        _showMissionCompleted(_missionPhotoData, prayerText);
+        _showMissionCompleted(_missionPhotoDataList, prayerText);
         const showPlainCelebration = () => {
             const rect = btn.getBoundingClientRect();
             createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
@@ -1692,7 +1755,7 @@ function editMissionSubmission() {
     const mission = getTodayMission();
     if (!mission) return;
     missionsRef.child(mission.date).child(mySessionId).remove().then(() => {
-        _missionPhotoData = null;
+        _missionPhotoDataList = [];
         document.getElementById('mission-file-input').value = '';
         document.getElementById('mission-gallery-input').value = '';
         document.getElementById('mission-upload-placeholder').style.display = 'flex';
