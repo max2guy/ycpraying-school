@@ -1,12 +1,22 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getIncompleteMissionTokens, isMissionReminderDate, pickRandomMissionWinner } = require('../mission-reminder');
+const { getIncompleteMissionTokens, getMissionNotification, isMissionReminderDate, pickRandomMissionWinner } = require('../mission-reminder');
 
 test('reminder runs only on submit-enabled mission dates', () => {
     assert.equal(isMissionReminderDate('2026-07-20'), true);
     assert.equal(isMissionReminderDate('2026-07-25'), true);
     assert.equal(isMissionReminderDate('2026-07-26'), false);
     assert.equal(isMissionReminderDate('2026-07-19'), false);
+});
+
+test('daily mission start notification uses the matching day and scripture range', () => {
+    assert.deepEqual(getMissionNotification('2026-07-21'), {
+        day: '2일차', range: '사도행전 2:14-21 필사'
+    });
+    assert.deepEqual(getMissionNotification('2026-07-26'), {
+        day: '주일', range: '사도행전 2:17 암송'
+    });
+    assert.equal(getMissionNotification('2026-07-27'), null);
 });
 
 test('reminder excludes users who completed the current mission', () => {

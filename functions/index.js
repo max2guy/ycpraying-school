@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const admin     = require('firebase-admin');
 const { summarizePushResponse } = require('./push-result');
-const { getIncompleteMissionTokens, isMissionReminderDate, pickRandomMissionWinner } = require('./mission-reminder');
+const { getIncompleteMissionTokens, getMissionNotification, isMissionReminderDate, pickRandomMissionWinner } = require('./mission-reminder');
 const { uniqueRecipientTokens } = require('./fcm-token-utils');
 admin.initializeApp();
 
@@ -157,7 +157,24 @@ exports.onNewPrayerEvent = functions
         return null;
     });
 
-/* ── 5. 미인증자 리마인더: 매일 밤 9시(KST), 이미 인증한 사용자 제외 ── */
+/* ── 5. 오늘의 미션 시작 알림: 매일 오전 6시 30분(KST) ── */
+exports.announceDailyMission = functions
+    .region('asia-northeast3')
+    .pubsub.schedule('30 6 * * *')
+    .timeZone('Asia/Seoul')
+    .onRun(async () => {
+        const mission = getMissionNotification(getKstDateString());
+        if (!mission) return null;
+        await sendPush(
+            await getAllTokens(null),
+            `📖 ${mission.day} 일일미션이 시작됐어요`,
+            `오늘의 말씀: ${mission.range} · 기도와 말씀 인증을 완료해 주세요!`,
+            { type: 'daily_mission_start' }
+        );
+        return null;
+    });
+
+/* ── 6. 미인증자 리마인더: 매일 밤 9시(KST), 이미 인증한 사용자 제외 ── */
 exports.remindIncompleteMission = functions
     .region('asia-northeast3')
     .pubsub.schedule('0 21 * * *')
@@ -182,7 +199,7 @@ exports.remindIncompleteMission = functions
         return null;
     });
 
-/* ── 6. 랜덤 선물: 인증 마감 5분 뒤, 서버에서 한 번만 확정 ── */
+/* ── 7. 랜덤 선물: 인증 마감 5분 뒤, 서버에서 한 번만 확정 ── */
 exports.drawRandomMissionWinner = functions
     .region('asia-northeast3')
     .pubsub.schedule('5 6 * * *')
@@ -219,7 +236,7 @@ exports.drawRandomMissionWinner = functions
         return null;
     });
 
-/* ── 7. Guess Who 공개 알림: 7월 27일 오전 6시 ── */
+/* ── 8. Guess Who 공개 알림: 7월 27일 오전 6시 ── */
 exports.announceGuessWhoOpening = functions
     .region('asia-northeast3')
     .pubsub.schedule('0 6 * * *')
