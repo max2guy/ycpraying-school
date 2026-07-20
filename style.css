@@ -788,7 +788,8 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-edit-btn:active { transform:scale(0.96); background:var(--rose-soft); }
 
 .mission-members-section { padding-bottom:4px; }
-.mission-members-title { font-size:0.80rem; font-weight:700; color:var(--text-dim); margin-bottom:10px; }
+.mission-members-title { font-size:0.80rem; font-weight:700; color:var(--text-dim); margin-bottom:3px; }
+.mission-members-hint { display:inline-block; margin-bottom:10px; padding:4px 8px; border-radius:8px; background:rgba(255,133,176,.08); color:var(--text-dim); font-size:.68rem; font-weight:700; }
 .mission-members-grid { display:flex; flex-wrap:wrap; gap:8px; }
 .mission-member-chip { display:flex; align-items:center; gap:6px; background:var(--rose-soft); border:1.5px solid var(--rose-border); border-radius:50px; padding:6px 14px; transition:transform 0.15s; }
 .mission-member-chip:active { transform:scale(0.96); }
