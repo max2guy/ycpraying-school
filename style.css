@@ -805,6 +805,7 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .mission-gift-banner { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:linear-gradient(135deg,#FFD86B,#FFB74D); color:#7A4A00; font-size:0.82rem; font-weight:800; padding:10px 14px; border-radius:var(--r-md); text-align:center; }
 .mission-gift-random-note { font-size:0.72rem; font-weight:600; opacity:0.85; }
 .mission-gift-badge { font-size:0.85rem; margin-left:2px; }
+.mission-random-gift-badge { filter:drop-shadow(0 1px 2px rgba(122,74,0,.22)); }
 
 /* ── 시크릿기프트 당첨 축하 팝업 ── */
 #mission-winner-popup { display:none; position:fixed; inset:0; background:rgba(120,50,90,0.65); z-index:4000; justify-content:center; align-items:center; }

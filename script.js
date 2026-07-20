@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.11 — 중고등부 전용 (S1 기반)
+// v1.5.12 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -307,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.11';
+const CURRENT_VERSION = '1.5.12';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1785,6 +1785,7 @@ function _renderMissionMembers(completions) {
         return;
     }
     const winnerUid = completions._firstPlace && completions._firstPlace.sessionId;
+    const randomWinnerUid = completions._randomWinner && completions._randomWinner.sessionId;
     grid.innerHTML = entries
         .sort((a, b) => (a[1].timestamp||0) - (b[1].timestamp||0))
         .map(([uid, data]) => {
@@ -1792,8 +1793,9 @@ function _renderMissionMembers(completions) {
             const clickable = data.photoData ? `onclick="_openMissionMemberPhoto('${uid}')" style="cursor:pointer"` : '';
             const deleteBtn = isAdmin ? `<button class="mission-member-delete-btn" onclick="event.stopPropagation(); adminDeleteMissionSubmission('${uid}')" aria-label="인증 사진 삭제">×</button>` : '';
             const giftBadge = uid === winnerUid ? '<span class="mission-gift-badge">🎁</span>' : '';
+            const randomGiftBadge = uid === randomWinnerUid ? '<span class="mission-gift-badge mission-random-gift-badge" title="랜덤 선물 당첨">🎲</span>' : '';
             return `<div class="mission-member-chip" ${clickable}>
-                <span>✅</span><span class="mission-member-name">${name}</span>${giftBadge}${deleteBtn}
+                <span>✅</span><span class="mission-member-name">${name}</span>${giftBadge}${randomGiftBadge}${deleteBtn}
             </div>`;
         }).join('');
 }

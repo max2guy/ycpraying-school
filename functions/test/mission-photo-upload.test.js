@@ -28,3 +28,9 @@ test('copying instructions explicitly require every verse in the assigned range'
   assert.equal(/13절을 손으로 직접 필사/.test(script), false);
   assert.equal((script.match(/전부를 손으로 필사/g) || []).length, 6);
 });
+
+test('random gift winners receive a dice badge in the completed member list', () => {
+  assert.match(script, /const randomWinnerUid = completions\._randomWinner/);
+  assert.match(script, /mission-random-gift-badge/);
+  assert.match(script, /🎲/);
+});
