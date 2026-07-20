@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.6 — 중고등부 전용 (S1 기반)
+// v1.5.7 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -307,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.6';
+const CURRENT_VERSION = '1.5.7';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1457,7 +1457,9 @@ function openMissionPopup(selectedMission) {
     document.getElementById('mission-scripture-label').textContent = mission.noSubmit ? '오늘의 암송 구절' : (isPastMission ? '지난 필사 구절' : '오늘의 필사 구절');
     document.getElementById('mission-background').textContent = mission.background || '';
     document.getElementById('mission-background').style.display = 'none';
-    document.getElementById('mission-background-toggle').textContent = '📖 말씀 배경 보기';
+    const backgroundToggle = document.getElementById('mission-background-toggle');
+    backgroundToggle.innerHTML = '📖 말씀 배경 보기 <span>⌄</span>';
+    backgroundToggle.setAttribute('aria-expanded', 'false');
 
     const historyEl = document.getElementById('mission-history');
     const historyMissions = MISSION_SCHEDULE.filter(m => m.date < currentMission.date);
@@ -1541,7 +1543,9 @@ function toggleMissionBackground() {
     const content = document.getElementById('mission-background');
     const isOpen = content.style.display !== 'none';
     content.style.display = isOpen ? 'none' : 'block';
-    document.getElementById('mission-background-toggle').textContent = isOpen ? '📖 말씀 배경 보기' : '📖 말씀 배경 닫기';
+    const toggle = document.getElementById('mission-background-toggle');
+    toggle.innerHTML = isOpen ? '📖 말씀 배경 보기 <span>⌄</span>' : '📖 말씀 배경 닫기 <span>⌃</span>';
+    toggle.setAttribute('aria-expanded', String(!isOpen));
 }
 
 function getMissionPhotos(data) {
