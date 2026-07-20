@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.9 — 중고등부 전용 (S1 기반)
+// v1.5.10 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -307,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.9';
+const CURRENT_VERSION = '1.5.10';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -1564,7 +1564,7 @@ function _showMissionCompleted(photoDataList, prayerText) {
         card.className = 'mission-photo-card';
         const img = document.createElement('img');
         img.src = photoData; img.alt = `제출한 인증 사진 ${index + 1}`;
-        img.onclick = () => openLightbox(photoData, prayerText);
+        img.onclick = () => openMissionPhotoGallery(photoDataList, prayerText, index);
         card.appendChild(img); container.appendChild(card);
     });
 }
@@ -1862,7 +1862,7 @@ function closeGiftWinnersModal() {
 
 function _openMissionMemberPhoto(uid) {
     const data = _missionCompletionsCache[uid];
-    if (data && data.photoData) openLightbox(data.photoData, data.prayerText);
+    if (data) openMissionPhotoGallery(getMissionPhotos(data), data.prayerText);
 }
 function toggleChatPopup() {
     const el = document.getElementById('chat-popup');
@@ -2442,20 +2442,48 @@ function createFirework(x, y) {
     });
 })();
 
+let _lightboxPhotos = [];
+let _lightboxPhotoIndex = 0;
+
 function openLightbox(src, caption) {
+    openMissionPhotoGallery([src], caption);
+}
+function openMissionPhotoGallery(photos, caption, startIndex = 0) {
+    _lightboxPhotos = (photos || []).filter(Boolean);
+    if (!_lightboxPhotos.length) return;
+    _lightboxPhotoIndex = Math.min(Math.max(startIndex, 0), _lightboxPhotos.length - 1);
+    const lb = document.getElementById('lightbox');
+    lb.dataset.caption = caption || '';
+    renderLightboxPhoto();
+    lb.classList.add('active');
+}
+function renderLightboxPhoto() {
     const lb = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
     const captionEl = document.getElementById('lightbox-caption');
-    img.src = src;
+    const isMultiple = _lightboxPhotos.length > 1;
+    img.src = _lightboxPhotos[_lightboxPhotoIndex];
     img.style.transform = '';
-    if (caption) {
-        captionEl.textContent = caption;
+    document.getElementById('lightbox-prev').classList.toggle('show', isMultiple);
+    document.getElementById('lightbox-next').classList.toggle('show', isMultiple);
+    const counter = document.getElementById('lightbox-counter');
+    counter.textContent = `${_lightboxPhotoIndex + 1} / ${_lightboxPhotos.length}`;
+    counter.classList.toggle('show', isMultiple);
+    if (lb.dataset.caption) {
+        captionEl.textContent = lb.dataset.caption;
         captionEl.classList.add('active');
     } else {
         captionEl.textContent = '';
         captionEl.classList.remove('active');
     }
-    lb.classList.add('active');
+}
+function showPreviousLightboxPhoto() {
+    _lightboxPhotoIndex = (_lightboxPhotoIndex - 1 + _lightboxPhotos.length) % _lightboxPhotos.length;
+    renderLightboxPhoto();
+}
+function showNextLightboxPhoto() {
+    _lightboxPhotoIndex = (_lightboxPhotoIndex + 1) % _lightboxPhotos.length;
+    renderLightboxPhoto();
 }
 function closeLightbox() {
     document.getElementById('lightbox').classList.remove('active');

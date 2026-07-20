@@ -12,6 +12,8 @@ test('mission upload accepts up to three photos and preserves a legacy cover pho
   assert.match(html, /id="mission-gallery-input" accept="image\/\*" multiple/);
   assert.match(script, /photoData: _missionPhotoDataList\[0\]/);
   assert.match(script, /photoDataList: _missionPhotoDataList/);
+  assert.match(script, /openMissionPhotoGallery\(getMissionPhotos\(data\), data\.prayerText\)/);
+  assert.match(script, /showNextLightboxPhoto\(\)/);
 });
 
 test('each mission range has a short background explanation', () => {
