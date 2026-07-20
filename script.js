@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.10 — 중고등부 전용 (S1 기반)
+// v1.5.11 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -307,7 +307,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.10';
+const CURRENT_VERSION = '1.5.11';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -2361,6 +2361,7 @@ function createFirework(x, y) {
     let lastDist = 0, lastMidX = 0, lastMidY = 0;
     let panStartX = 0, panStartY = 0, panOriginTx = 0, panOriginTy = 0;
     let isPinching = false, isPanning = false;
+    let swipeStartX = 0, swipeStartY = 0, isSwipeCandidate = false;
     let tapTimer = null, tapCount = 0;
 
     function applyTransform() {
@@ -2387,12 +2388,14 @@ function createFirework(x, y) {
     }
 
     const lb = document.getElementById('lightbox');
+    lb.addEventListener('lightboxphotochange', resetTransform);
 
     lb.addEventListener('touchstart', e => {
         const t = e.touches;
         if (t.length === 2) {
             e.preventDefault();
             isPinching = true; isPanning = false;
+            isSwipeCandidate = false;
             lastDist = dist(t);
             const m = mid(t);
             lastMidX = m.x; lastMidY = m.y;
@@ -2400,6 +2403,8 @@ function createFirework(x, y) {
             isPanning = scale > 1;
             panStartX = t[0].clientX; panStartY = t[0].clientY;
             panOriginTx = tx; panOriginTy = ty;
+            swipeStartX = t[0].clientX; swipeStartY = t[0].clientY;
+            isSwipeCandidate = scale === 1 && _lightboxPhotos.length > 1;
             // 더블탭 감지
             tapCount++;
             clearTimeout(tapTimer);
@@ -2434,10 +2439,17 @@ function createFirework(x, y) {
     lb.addEventListener('touchend', e => {
         if (e.touches.length < 2) isPinching = false;
         if (e.touches.length === 0) {
+            const dx = e.changedTouches[0].clientX - swipeStartX;
+            const dy = e.changedTouches[0].clientY - swipeStartY;
+            if (isSwipeCandidate && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                if (dx < 0) showNextLightboxPhoto();
+                else showPreviousLightboxPhoto();
+            }
             if (scale < 1) { scale = 1; tx = 0; ty = 0; }
             clampTranslation();
             applyTransform();
             isPanning = false;
+            isSwipeCandidate = false;
         }
     });
 })();
@@ -2463,7 +2475,7 @@ function renderLightboxPhoto() {
     const captionEl = document.getElementById('lightbox-caption');
     const isMultiple = _lightboxPhotos.length > 1;
     img.src = _lightboxPhotos[_lightboxPhotoIndex];
-    img.style.transform = '';
+    lb.dispatchEvent(new Event('lightboxphotochange'));
     document.getElementById('lightbox-prev').classList.toggle('show', isMultiple);
     document.getElementById('lightbox-next').classList.toggle('show', isMultiple);
     const counter = document.getElementById('lightbox-counter');
