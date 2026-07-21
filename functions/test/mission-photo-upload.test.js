@@ -56,6 +56,7 @@ test('mission prayer node sync is server-side and sourced from the signed-in mis
     assert.match(functionsIndex, /missions\/\$\{missionDate\}\/\$\{context\.auth\.uid\}/);
     assert.match(functionsIndex, /const prayerText = typeof mission\?\.prayerText/);
     assert.match(functionsIndex, /members\/\$\{memberKey\}\/prayers/);
+    assert.match(functionsIndex, /if \(existingIndex >= 0\) prayers\.splice\(existingIndex, 1\);[\s\S]*prayers\.unshift\(missionPrayer\)/);
     assert.match(script, /httpsCallable\('syncMissionMemberNode'\)\(\{ missionDate: mission\.date \}\)/);
     assert.match(script, /이전 버전에서 노드 반영이 누락된 인증도/);
 });

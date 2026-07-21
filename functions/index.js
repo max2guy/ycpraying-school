@@ -322,8 +322,8 @@ exports.syncMissionMemberNode = functions
         if (member) {
             const prayers = Array.isArray(member.prayers) ? [...member.prayers] : Object.values(member.prayers || {});
             const existingIndex = prayers.findIndex(prayer => prayer?.missionDate === missionDate);
-            if (existingIndex >= 0) prayers[existingIndex] = { ...prayers[existingIndex], ...missionPrayer };
-            else prayers.unshift(missionPrayer);
+            if (existingIndex >= 0) prayers.splice(existingIndex, 1);
+            prayers.unshift(missionPrayer);
             await db.ref(`members/${memberKey}/prayers`).set(prayers);
         } else {
             await db.ref('members').push({
