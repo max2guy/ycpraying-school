@@ -308,7 +308,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.14';
+const CURRENT_VERSION = '1.5.15';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
