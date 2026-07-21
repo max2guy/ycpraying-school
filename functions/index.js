@@ -280,8 +280,10 @@ exports.reclaimMissionIdentity = functions
             if (!claim.committed || claim.snapshot.val() !== currentSessionId) {
                 throw new functions.https.HttpsError('failed-precondition', '닉네임을 복구할 수 없습니다.');
             }
-            await db.ref(`guessWhoParticipants/${currentSessionId}`).set({ ...participant, migratedAt: admin.database.ServerValue.TIMESTAMP });
-            await db.ref(`guessWhoParticipants/${previousSessionId}`).remove();
+            await db.ref().update({
+                [`guessWhoParticipants/${currentSessionId}`]: { ...participant, migratedAt: admin.database.ServerValue.TIMESTAMP },
+                [`guessWhoParticipants/${previousSessionId}`]: null
+            });
         }
         return { aliasName: participant.aliasName };
     });

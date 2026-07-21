@@ -6,6 +6,7 @@ const path = require('path');
 const root = path.join(__dirname, '..', '..');
 const script = fs.readFileSync(path.join(root, 'script.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const functionsIndex = fs.readFileSync(path.join(root, 'functions', 'index.js'), 'utf8');
 
 test('mission upload accepts up to three photos and preserves a legacy cover photo', () => {
   assert.match(script, /const MISSION_PHOTO_LIMIT = 3/);
@@ -46,4 +47,6 @@ test('mission alias is restored from the signed-in participant record', () => {
   assert.match(script, /guessWhoParticipantsRef\.child\(mySessionId\)\.once\('value'\)/);
   assert.match(script, /const MISSION_PARTICIPANT_KEY_STORAGE_KEY/);
   assert.match(script, /httpsCallable\('reclaimMissionIdentity'\)/);
+  assert.match(functionsIndex, /\[`guessWhoParticipants\/\$\{currentSessionId\}`\]: \{ \.\.\.participant/);
+  assert.match(functionsIndex, /\[`guessWhoParticipants\/\$\{previousSessionId\}`\]: null/);
 });
