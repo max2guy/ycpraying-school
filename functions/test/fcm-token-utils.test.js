@@ -1,6 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { uniqueRecipientTokens } = require('../fcm-token-utils');
+
+const appScript = fs.readFileSync(path.join(__dirname, '../../script.js'), 'utf8');
 
 test('sends one notification for repeated registrations of the same token', () => {
   const recipients = uniqueRecipientTokens([
@@ -23,4 +27,9 @@ test('does not notify the sender through an older duplicate registration', () =>
   ], 'sender');
 
   assert.deepEqual(recipients.map(item => item.token), ['recipient']);
+});
+
+test('forced app updates clear caches before one guarded reload', () => {
+  assert.match(appScript, /const FORCE_UPDATE_GUARD_KEY/);
+  assert.match(appScript, /Promise\.all\(\[unregister, clearCaches\]\)\.finally\(\(\) => window\.location\.reload\(\)\)/);
 });

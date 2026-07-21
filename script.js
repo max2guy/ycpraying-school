@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.15 — 중고등부 전용 (S1 기반)
+// v1.5.16 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -308,7 +308,8 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.15';
+const CURRENT_VERSION = '1.5.16';
+const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
 function compareVersions(a, b) {
@@ -321,14 +322,15 @@ function compareVersions(a, b) {
     return 0;
 }
 function forceUpdateApp() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-    }
-    if ('caches' in window) {
-        caches.keys().then(names => { names.forEach(n => caches.delete(n)); window.location.reload(true); });
-    } else {
-        window.location.reload(true);
-    }
+    if (sessionStorage.getItem(FORCE_UPDATE_GUARD_KEY)) return;
+    sessionStorage.setItem(FORCE_UPDATE_GUARD_KEY, '1');
+    const unregister = 'serviceWorker' in navigator
+        ? navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(reg => reg.unregister())))
+        : Promise.resolve();
+    const clearCaches = 'caches' in window
+        ? caches.keys().then(names => Promise.all(names.map(name => caches.delete(name))))
+        : Promise.resolve();
+    Promise.all([unregister, clearCaches]).finally(() => window.location.reload());
 }
 database.ref('appConfig/requiredVersion').once('value').then(snap => {
     const required = snap.val();
