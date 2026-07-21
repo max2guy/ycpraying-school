@@ -40,3 +40,8 @@ test('gift banner shows the random winner below the first-place winner', () => {
   assert.match(script, /mission-gift-random-winner/);
   assert.match(html, /id="mission-gift-random-line"/);
 });
+
+test('mission alias is restored from the signed-in participant record', () => {
+  assert.match(script, /function restoreMissionAliasFromParticipant\(\)/);
+  assert.match(script, /guessWhoParticipantsRef\.child\(mySessionId\)\.once\('value'\)/);
+});

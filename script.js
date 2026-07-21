@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.14 — 중고등부 전용 (S1 기반)
+// v1.5.15 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -245,6 +245,7 @@ participantAuthReady.then(user => {
     mySessionId = user.uid;
     localStorage.setItem('mySessionId', mySessionId);
     if (typeof myPresenceRef !== 'undefined') myPresenceRef = presenceRef.child(mySessionId);
+    restoreMissionAliasFromParticipant();
 }).catch(error => console.error('[Auth] 익명 참가자 인증 실패:', error));
 
 const MISSION_ALIAS_STORAGE_KEY = 'missionAlias';
@@ -1189,6 +1190,22 @@ let _missionSubmittedPrayerText = '';
 watchFinishedEventNames();
 
 function getMissionAlias() { return localStorage.getItem(MISSION_ALIAS_STORAGE_KEY) || ''; }
+function restoreMissionAliasFromParticipant() {
+    return guessWhoParticipantsRef.child(mySessionId).once('value').then(snap => {
+        const participant = snap.val();
+        const alias = participant?.aliasName;
+        if (!alias || !MISSION_ALIASES.includes(alias)) return '';
+        return missionAliasesRef.child(alias).transaction(current =>
+            current === null || current === mySessionId ? mySessionId : undefined
+        ).then(result => {
+            if (result.snapshot.val() !== mySessionId) return '';
+            localStorage.setItem(MISSION_ALIAS_STORAGE_KEY, alias);
+            if (participant.candidateId) localStorage.setItem(GUESS_WHO_CANDIDATE_STORAGE_KEY, participant.candidateId);
+            updateMissionAliasUI(alias);
+            return alias;
+        });
+    }).catch(() => '');
+}
 function updateMissionAliasUI(alias) {
     const input = document.getElementById('mission-name-input');
     const note = document.getElementById('mission-alias-note');
@@ -1203,18 +1220,26 @@ function updateMissionAliasUI(alias) {
         note.textContent = '이름을 입력하면 나만의 익명 닉네임이 자동으로 정해져요.';
     }
 }
-function assignMissionAlias() {
+function assignMissionAlias(skipRestore = false) {
     const existingAlias = getMissionAlias();
     if (existingAlias) {
         return missionAliasesRef.child(existingAlias).once('value').then(snap => {
             if (snap.val() === mySessionId) { updateMissionAliasUI(existingAlias); return existingAlias; }
-            localStorage.removeItem(MISSION_ALIAS_STORAGE_KEY);
-            localStorage.removeItem(GUESS_WHO_CANDIDATE_STORAGE_KEY);
-            localStorage.removeItem(GUESS_WHO_DRAFT_STORAGE_KEY);
-            localStorage.removeItem(GUESS_WHO_SUBMITTED_STORAGE_KEY);
-            updateMissionAliasUI('');
-            return assignMissionAlias();
+            return restoreMissionAliasFromParticipant().then(restoredAlias => {
+                if (restoredAlias) return restoredAlias;
+                localStorage.removeItem(MISSION_ALIAS_STORAGE_KEY);
+                localStorage.removeItem(GUESS_WHO_CANDIDATE_STORAGE_KEY);
+                localStorage.removeItem(GUESS_WHO_DRAFT_STORAGE_KEY);
+                localStorage.removeItem(GUESS_WHO_SUBMITTED_STORAGE_KEY);
+                updateMissionAliasUI('');
+                return assignMissionAlias();
+            });
         });
+    }
+    if (!skipRestore) {
+        return restoreMissionAliasFromParticipant().then(restoredAlias =>
+            restoredAlias || assignMissionAlias(true)
+        );
     }
     if (_missionAliasAssignment) return _missionAliasAssignment;
     const realName = document.getElementById('mission-name-input').value.trim();
@@ -1651,8 +1676,6 @@ function removeMissionPhoto(index) {
 function submitMission() {
     if (!isMissionSubmitWindowOpen()) { alert('⏰ 미션 인증 가능 시간을 확인해주세요.'); return; }
     if (!_missionPhotoDataList.length) { alert('📷 필사 인증 사진을 먼저 선택해주세요!'); return; }
-    const enteredName = document.getElementById('mission-name-input').value.trim();
-    if (!enteredName) { alert('✍️ 처음 한 번만 이름을 입력해주세요!'); return; }
     const prayerText = document.getElementById('mission-prayer-input').value.trim();
     if (!prayerText) { alert('🙏 기도문을 적어주세요!'); return; }
     const mission = getTodayMission();
