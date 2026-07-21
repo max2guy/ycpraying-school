@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.18 — 중고등부 전용 (S1 기반)
+// v1.5.19 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.18';
+const CURRENT_VERSION = '1.5.19';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1298,7 +1298,7 @@ let _guessWhoHistoryAlias = '';
 const GUESS_WHO_OPENING_STORAGE_KEY = 'guessWhoOpeningSeen';
 function isGuessWhoTestMode() { return false; }
 function isGuessWhoOpen() {
-    return isGuessWhoTestMode() || getMissionKstDateStr() > MISSION_SCHEDULE[MISSION_SCHEDULE.length - 1].date;
+    return isGuessWhoTestMode() || getMissionKstDateStr() >= MISSION_SCHEDULE[MISSION_SCHEDULE.length - 1].date;
 }
 function getGuessWhoDraft() {
     try { return JSON.parse(localStorage.getItem(GUESS_WHO_DRAFT_STORAGE_KEY)) || {}; } catch (_) { return {}; }
@@ -1702,37 +1702,26 @@ function submitMission() {
     if (!mission) return;
     const btn = document.getElementById('mission-submit-btn');
     btn.disabled = true; btn.textContent = '⏳ 제출 중...';
-    const missionDateRef = missionsRef.child(mission.date);
     assignMissionAlias().then(alias => {
         if (!alias) throw new Error('익명 닉네임을 만들 수 없습니다.');
-        return missionDateRef.child(mySessionId).set({
-        photoData: _missionPhotoDataList[0],
-        photoDataList: _missionPhotoDataList,
-        timestamp: Date.now(),
-        day: mission.day,
-            memberName: alias,
-            aliasName: alias,
-            prayerText: prayerText
-        }).then(() => firebase.app().functions('asia-northeast3').httpsCallable('syncMissionMemberNode')({ missionDate: mission.date })).then(() => {
-        _missionSubmittedPrayerText = prayerText;
-        _showMissionCompleted(_missionPhotoDataList, prayerText);
+        return firebase.app().functions('asia-northeast3').httpsCallable('submitMission')({
+            photoDataList: _missionPhotoDataList,
+            prayerText
+        }).then(result => {
+        const savedMission = result.data.mission;
+        _missionSubmittedPrayerText = savedMission.prayerText || prayerText;
+        _showMissionCompleted(getMissionPhotos(savedMission), _missionSubmittedPrayerText);
+        if (!result.data.nodeSynced) showWeatherToast('✅ 인증 저장 완료', '기도 노드 반영은 잠시 후 자동으로 다시 시도됩니다.', 5000);
         const showPlainCelebration = () => {
             const rect = btn.getBoundingClientRect();
             createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
             showWeatherToast('🎉 미션 완료!', '오늘도 은혜로운 하루 되세요 🙏', 4000);
         };
-        missionDateRef.child('_firstPlace').transaction(current => {
-            if (current === null) return { sessionId: mySessionId, memberName: alias, timestamp: Date.now() };
-            return undefined;
-        }).then(result => {
-            const iWonFirstPlace = result.committed && result.snapshot.val() && result.snapshot.val().sessionId === mySessionId;
-            if (iWonFirstPlace) {
+        if (result.data.isFirstPlace) {
                 _showWinnerCelebration('오늘의 시크릿기프트 1등 당첨! 🎁');
-            } else {
+        } else {
                 showPlainCelebration();
-            }
-        }).catch(() => { showPlainCelebration(); });
-        });
+        }});
     }).catch(err => {
         alert('제출 실패: ' + err.message);
         btn.disabled = false; btn.textContent = '✅ 인증 제출하기';

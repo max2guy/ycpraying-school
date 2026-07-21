@@ -45,7 +45,7 @@
       ".read": true,
       "$date": {
         "$sessionId": {
-          ".write": "auth != null && ($sessionId === auth.uid || ($sessionId === '_firstPlace' && !data.exists()))"
+          ".write": "auth != null && auth.token.email === 'admin@church.com'"
         }
       }
     },
@@ -61,7 +61,7 @@
       }
     },
     "guessWhoCandidates": {
-      ".read": "now >= 1785078000000",
+      ".read": "now >= 1785013200000",
       ".write": "auth != null"
     },
     "guessWhoAnswers": {

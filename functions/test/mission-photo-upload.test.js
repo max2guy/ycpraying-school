@@ -11,8 +11,8 @@ const functionsIndex = fs.readFileSync(path.join(root, 'functions', 'index.js'),
 test('mission upload accepts up to three photos and preserves a legacy cover photo', () => {
   assert.match(script, /const MISSION_PHOTO_LIMIT = 3/);
   assert.match(html, /id="mission-gallery-input" accept="image\/\*" multiple/);
-  assert.match(script, /photoData: _missionPhotoDataList\[0\]/);
   assert.match(script, /photoDataList: _missionPhotoDataList/);
+  assert.match(functionsIndex, /photoData: photoDataList\[0\], photoDataList/);
   assert.match(script, /openMissionPhotoGallery\(getMissionPhotos\(data\), data\.prayerText\)/);
   assert.match(script, /showNextLightboxPhoto\(\)/);
   assert.match(script, /isSwipeCandidate && Math\.abs\(dx\) > 45/);
@@ -59,4 +59,13 @@ test('mission prayer node sync is server-side and sourced from the signed-in mis
     assert.match(functionsIndex, /if \(existingIndex >= 0\) prayers\.splice\(existingIndex, 1\);[\s\S]*prayers\.unshift\(missionPrayer\)/);
     assert.match(script, /httpsCallable\('syncMissionMemberNode'\)\(\{ missionDate: mission\.date \}\)/);
     assert.match(script, /이전 버전에서 노드 반영이 누락된 인증도/);
+});
+
+test('mission submission uses the server date and keeps node sync status separate from saved proof', () => {
+    assert.match(functionsIndex, /exports\.submitMission/);
+    assert.match(functionsIndex, /const missionDate = getMissionKstDateString\(\)/);
+    assert.match(functionsIndex, /const submitted = await missionRef\.transaction\(current => current \|\|/);
+    assert.match(functionsIndex, /let nodeSynced = true/);
+    assert.match(script, /httpsCallable\('submitMission'\)/);
+    assert.match(script, /인증 저장 완료/);
 });

@@ -6,6 +6,10 @@ const { uniqueRecipientTokens } = require('./fcm-token-utils');
 admin.initializeApp();
 
 const APP_URL = 'https://ycpraying-school.web.app/';
+const MISSION_DAYS = {
+    '2026-07-20': 1, '2026-07-21': 2, '2026-07-22': 3,
+    '2026-07-23': 4, '2026-07-24': 5, '2026-07-25': 6
+};
 
 /* ── 전체 FCM 토큰 수집 (특정 senderId 제외 가능) ── */
 async function getAllTokens(excludeSessionId) {
@@ -67,6 +71,17 @@ function getKstDateString() {
     }).formatToParts(new Date());
     const value = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
     return `${value.year}-${value.month}-${value.day}`;
+}
+
+function getMissionKstDateString() {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23'
+    }).formatToParts(now);
+    const value = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+    const date = new Date(`${value.year}-${value.month}-${value.day}T00:00:00Z`);
+    if (Number(value.hour) < 6) date.setUTCDate(date.getUTCDate() - 1);
+    return date.toISOString().slice(0, 10);
 }
 
 function getPreviousDateString(date) {
@@ -236,13 +251,13 @@ exports.drawRandomMissionWinner = functions
         return null;
     });
 
-/* ── 8. Guess Who 공개 알림: 7월 27일 오전 6시 ── */
+/* ── 8. Guess Who 공개 알림: 7월 26일 오전 6시 ── */
 exports.announceGuessWhoOpening = functions
     .region('asia-northeast3')
     .pubsub.schedule('0 6 * * *')
     .timeZone('Asia/Seoul')
     .onRun(async () => {
-        if (getKstDateString() !== '2026-07-27') return null;
+        if (getKstDateString() !== '2026-07-26') return null;
         const openedRef = admin.database().ref('guessWhoGame/openingAnnouncedAt');
         const claimed = await openedRef.transaction(current => current === null ? admin.database.ServerValue.TIMESTAMP : undefined);
         if (!claimed.committed) return null;
@@ -288,24 +303,12 @@ exports.reclaimMissionIdentity = functions
         return { aliasName: participant.aliasName };
     });
 
-// 익명 로그인 ID가 바뀌어도, 본인의 인증 기록에서만 기도 노드 자동 반영을 수행한다.
-exports.syncMissionMemberNode = functions
-    .region('asia-northeast3')
-    .https.onCall(async (data, context) => {
-        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
-        const missionDate = typeof data?.missionDate === 'string' ? data.missionDate : '';
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(missionDate)) {
-            throw new functions.https.HttpsError('invalid-argument', '유효하지 않은 미션 날짜입니다.');
-        }
-
-        const db = admin.database();
-        const missionSnap = await db.ref(`missions/${missionDate}/${context.auth.uid}`).once('value');
+async function syncMissionMemberNodeForSession(db, sessionId, missionDate) {
+        const missionSnap = await db.ref(`missions/${missionDate}/${sessionId}`).once('value');
         const mission = missionSnap.val();
         const aliasName = mission?.aliasName || mission?.memberName;
         const prayerText = typeof mission?.prayerText === 'string' ? mission.prayerText.trim() : '';
-        if (!aliasName || !prayerText) {
-            throw new functions.https.HttpsError('failed-precondition', '저장된 인증 기록을 찾을 수 없습니다.');
-        }
+        if (!aliasName || !prayerText) throw new Error('저장된 인증 기록을 찾을 수 없습니다.');
 
         const membersSnap = await db.ref('members').once('value');
         let memberKey = '';
@@ -330,7 +333,7 @@ exports.syncMissionMemberNode = functions
                 id: `mission_${Date.now()}`,
                 name: aliasName,
                 type: 'member',
-                ownerUid: context.auth.uid,
+                ownerUid: sessionId,
                 color: '#FFE4A3',
                 prayers: [missionPrayer],
                 rotation: 0,
@@ -338,6 +341,65 @@ exports.syncMissionMemberNode = functions
             });
         }
         return { aliasName };
+}
+
+// 익명 로그인 ID가 바뀌어도, 본인의 인증 기록에서만 기도 노드 자동 반영을 수행한다.
+exports.syncMissionMemberNode = functions
+    .region('asia-northeast3')
+    .https.onCall(async (data, context) => {
+        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        const missionDate = typeof data?.missionDate === 'string' ? data.missionDate : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(missionDate)) {
+            throw new functions.https.HttpsError('invalid-argument', '유효하지 않은 미션 날짜입니다.');
+        }
+        return syncMissionMemberNodeForSession(admin.database(), context.auth.uid, missionDate);
+    });
+
+// 서버 시간으로만 미션 인증·1등 선정을 확정한다.
+exports.submitMission = functions
+    .region('asia-northeast3')
+    .https.onCall(async (data, context) => {
+        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        const missionDate = getMissionKstDateString();
+        const day = MISSION_DAYS[missionDate];
+        if (!day) throw new functions.https.HttpsError('failed-precondition', '현재는 미션 인증 시간이 아닙니다.');
+
+        const photoDataList = Array.isArray(data?.photoDataList)
+            ? data.photoDataList.filter(photo => typeof photo === 'string' && photo.startsWith('data:image/'))
+            : [];
+        const prayerText = typeof data?.prayerText === 'string' ? data.prayerText.trim() : '';
+        if (!photoDataList.length || photoDataList.length > 3 || !prayerText || prayerText.length > 500) {
+            throw new functions.https.HttpsError('invalid-argument', '사진(1~3장)과 500자 이하 기도문을 확인해주세요.');
+        }
+
+        const db = admin.database();
+        const participant = (await db.ref(`guessWhoParticipants/${context.auth.uid}`).once('value')).val();
+        const aliasName = participant?.aliasName;
+        if (!aliasName) throw new functions.https.HttpsError('failed-precondition', '닉네임을 먼저 확인해주세요.');
+
+        const missionRef = db.ref(`missions/${missionDate}/${context.auth.uid}`);
+        const submitted = await missionRef.transaction(current => current || ({
+            photoData: photoDataList[0], photoDataList,
+            timestamp: admin.database.ServerValue.TIMESTAMP,
+            day, memberName: aliasName, aliasName, prayerText
+        }));
+        const mission = submitted.snapshot.val();
+        let isFirstPlace = false;
+        if (submitted.committed) {
+            const firstPlace = await db.ref(`missions/${missionDate}/_firstPlace`).transaction(current => current || ({
+                sessionId: context.auth.uid, memberName: aliasName,
+                timestamp: admin.database.ServerValue.TIMESTAMP
+            }));
+            isFirstPlace = firstPlace.committed && firstPlace.snapshot.val()?.sessionId === context.auth.uid;
+        }
+        let nodeSynced = true;
+        try {
+            await syncMissionMemberNodeForSession(db, context.auth.uid, missionDate);
+        } catch (error) {
+            nodeSynced = false;
+            console.error('[MISSION] node sync failed', { missionDate, sessionId: context.auth.uid, message: error.message });
+        }
+        return { mission, isFirstPlace, nodeSynced };
     });
 
 /* ── Guess Who? 정답 공개 및 서버 채점 ── */
