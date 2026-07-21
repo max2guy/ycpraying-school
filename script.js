@@ -40,8 +40,8 @@ if ('serviceWorker' in navigator) {
                 }
             });
         });
-        // 2분마다 업데이트 체크
-        setInterval(function() { reg.update(); }, 2 * 60 * 1000);
+        // 앱 실행 중에는 30분마다만 확인해 배터리·네트워크 사용을 줄인다.
+        setInterval(function() { reg.update(); }, 30 * 60 * 1000);
     }).catch(function(err) { console.log('SW Fail:', err); });
 }
 

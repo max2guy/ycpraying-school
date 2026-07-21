@@ -35,3 +35,8 @@ test('app refresh and forced updates preserve local participant identity', () =>
   assert.doesNotMatch(appScript, /function forceRefresh\(\)[\s\S]{0,500}unregister/);
   assert.doesNotMatch(appScript, /function forceUpdateApp\(\)[\s\S]{0,500}caches\.keys/);
 });
+
+test('service worker update checks run at a battery-friendly interval', () => {
+    assert.match(appScript, /setInterval\(function\(\) \{ reg\.update\(\); \}, 30 \* 60 \* 1000\)/);
+    assert.doesNotMatch(appScript, /setInterval\(function\(\) \{ reg\.update\(\); \}, 2 \* 60 \* 1000\)/);
+});
