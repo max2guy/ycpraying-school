@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.17 — 중고등부 전용 (S1 기반)
+// v1.5.18 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.17';
+const CURRENT_VERSION = '1.5.18';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1565,6 +1565,8 @@ function openMissionPopup(selectedMission) {
             const v = snap.val();
             _missionSubmittedPrayerText = v.prayerText || '';
             _showMissionCompleted(getMissionPhotos(v), v.prayerText);
+            // 이전 버전에서 노드 반영이 누락된 인증도, 본인 기록을 기준으로 한 번 복구한다.
+            firebase.app().functions('asia-northeast3').httpsCallable('syncMissionMemberNode')({ missionDate: mission.date }).catch(() => {});
         }
     });
 
@@ -1711,8 +1713,7 @@ function submitMission() {
             memberName: alias,
             aliasName: alias,
             prayerText: prayerText
-        }).then(() => {
-        ensureMissionMemberNode(alias, prayerText, mission.date);
+        }).then(() => firebase.app().functions('asia-northeast3').httpsCallable('syncMissionMemberNode')({ missionDate: mission.date })).then(() => {
         _missionSubmittedPrayerText = prayerText;
         _showMissionCompleted(_missionPhotoDataList, prayerText);
         const showPlainCelebration = () => {

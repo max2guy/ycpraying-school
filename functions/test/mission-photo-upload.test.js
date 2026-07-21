@@ -50,3 +50,12 @@ test('mission alias is restored from the signed-in participant record', () => {
   assert.match(functionsIndex, /\[`guessWhoParticipants\/\$\{currentSessionId\}`\]: \{ \.\.\.participant/);
   assert.match(functionsIndex, /\[`guessWhoParticipants\/\$\{previousSessionId\}`\]: null/);
 });
+
+test('mission prayer node sync is server-side and sourced from the signed-in mission record', () => {
+    assert.match(functionsIndex, /exports\.syncMissionMemberNode/);
+    assert.match(functionsIndex, /missions\/\$\{missionDate\}\/\$\{context\.auth\.uid\}/);
+    assert.match(functionsIndex, /const prayerText = typeof mission\?\.prayerText/);
+    assert.match(functionsIndex, /members\/\$\{memberKey\}\/prayers/);
+    assert.match(script, /httpsCallable\('syncMissionMemberNode'\)\(\{ missionDate: mission\.date \}\)/);
+    assert.match(script, /이전 버전에서 노드 반영이 누락된 인증도/);
+});

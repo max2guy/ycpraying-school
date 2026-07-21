@@ -288,6 +288,58 @@ exports.reclaimMissionIdentity = functions
         return { aliasName: participant.aliasName };
     });
 
+// 익명 로그인 ID가 바뀌어도, 본인의 인증 기록에서만 기도 노드 자동 반영을 수행한다.
+exports.syncMissionMemberNode = functions
+    .region('asia-northeast3')
+    .https.onCall(async (data, context) => {
+        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        const missionDate = typeof data?.missionDate === 'string' ? data.missionDate : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(missionDate)) {
+            throw new functions.https.HttpsError('invalid-argument', '유효하지 않은 미션 날짜입니다.');
+        }
+
+        const db = admin.database();
+        const missionSnap = await db.ref(`missions/${missionDate}/${context.auth.uid}`).once('value');
+        const mission = missionSnap.val();
+        const aliasName = mission?.aliasName || mission?.memberName;
+        const prayerText = typeof mission?.prayerText === 'string' ? mission.prayerText.trim() : '';
+        if (!aliasName || !prayerText) {
+            throw new functions.https.HttpsError('failed-precondition', '저장된 인증 기록을 찾을 수 없습니다.');
+        }
+
+        const membersSnap = await db.ref('members').once('value');
+        let memberKey = '';
+        let member = null;
+        membersSnap.forEach(child => {
+            const value = child.val();
+            if (!member && value?.type === 'member' && value?.name === aliasName) {
+                memberKey = child.key;
+                member = value;
+            }
+        });
+
+        const missionPrayer = { content: prayerText, date: missionDate, missionDate };
+        if (member) {
+            const prayers = Array.isArray(member.prayers) ? [...member.prayers] : Object.values(member.prayers || {});
+            const existingIndex = prayers.findIndex(prayer => prayer?.missionDate === missionDate);
+            if (existingIndex >= 0) prayers[existingIndex] = { ...prayers[existingIndex], ...missionPrayer };
+            else prayers.unshift(missionPrayer);
+            await db.ref(`members/${memberKey}/prayers`).set(prayers);
+        } else {
+            await db.ref('members').push({
+                id: `mission_${Date.now()}`,
+                name: aliasName,
+                type: 'member',
+                ownerUid: context.auth.uid,
+                color: '#FFE4A3',
+                prayers: [missionPrayer],
+                rotation: 0,
+                rotationDirection: 1
+            });
+        }
+        return { aliasName };
+    });
+
 /* ── Guess Who? 정답 공개 및 서버 채점 ── */
 exports.revealGuessWhoResults = functions
     .region('asia-northeast3')
