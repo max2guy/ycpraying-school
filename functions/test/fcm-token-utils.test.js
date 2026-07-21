@@ -29,7 +29,9 @@ test('does not notify the sender through an older duplicate registration', () =>
   assert.deepEqual(recipients.map(item => item.token), ['recipient']);
 });
 
-test('forced app updates clear caches before one guarded reload', () => {
+test('app refresh and forced updates preserve local participant identity', () => {
   assert.match(appScript, /const FORCE_UPDATE_GUARD_KEY/);
-  assert.match(appScript, /Promise\.all\(\[unregister, clearCaches\]\)\.finally\(\(\) => window\.location\.reload\(\)\)/);
+  assert.match(appScript, /닉네임과 인증 기록은 유지됩니다/);
+  assert.doesNotMatch(appScript, /function forceRefresh\(\)[\s\S]{0,500}unregister/);
+  assert.doesNotMatch(appScript, /function forceUpdateApp\(\)[\s\S]{0,500}caches\.keys/);
 });

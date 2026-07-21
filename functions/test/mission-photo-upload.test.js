@@ -44,4 +44,6 @@ test('gift banner shows the random winner below the first-place winner', () => {
 test('mission alias is restored from the signed-in participant record', () => {
   assert.match(script, /function restoreMissionAliasFromParticipant\(\)/);
   assert.match(script, /guessWhoParticipantsRef\.child\(mySessionId\)\.once\('value'\)/);
+  assert.match(script, /const MISSION_PARTICIPANT_KEY_STORAGE_KEY/);
+  assert.match(script, /httpsCallable\('reclaimMissionIdentity'\)/);
 });

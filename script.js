@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.16 — 중고등부 전용 (S1 기반)
+// v1.5.17 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -118,15 +118,9 @@ function cancelConfirmDialog() {
 }
 
 function forceRefresh() {
-    showConfirmDialog('앱 새로고침', '화면을 강제로 새로고침 하시겠습니까?\n캐시된 데이터를 모두 삭제합니다.', function() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-        }
-        if ('caches' in window) {
-            caches.keys().then(names => { names.forEach(n => caches.delete(n)); window.location.reload(true); });
-        } else {
-            window.location.reload(true);
-        }
+    showConfirmDialog('앱 새로고침', '화면을 새로 불러옵니다. 닉네임과 인증 기록은 유지됩니다.', function() {
+        const update = _swReg ? _swReg.update() : Promise.resolve();
+        update.finally(() => window.location.reload());
     });
 }
 
@@ -245,10 +239,13 @@ participantAuthReady.then(user => {
     mySessionId = user.uid;
     localStorage.setItem('mySessionId', mySessionId);
     if (typeof myPresenceRef !== 'undefined') myPresenceRef = presenceRef.child(mySessionId);
-    restoreMissionAliasFromParticipant();
+    restoreMissionAliasFromParticipant().then(alias =>
+        alias || reclaimMissionIdentity().then(() => restoreMissionAliasFromParticipant())
+    ).then(() => ensureMissionParticipantKey());
 }).catch(error => console.error('[Auth] 익명 참가자 인증 실패:', error));
 
 const MISSION_ALIAS_STORAGE_KEY = 'missionAlias';
+const MISSION_PARTICIPANT_KEY_STORAGE_KEY = 'missionParticipantKey';
 const GUESS_WHO_CANDIDATE_STORAGE_KEY = 'guessWhoCandidateId';
 const GUESS_WHO_DRAFT_STORAGE_KEY = 'guessWhoDraft';
 const GUESS_WHO_SUBMITTED_STORAGE_KEY = 'guessWhoSubmitted';
@@ -308,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.16';
+const CURRENT_VERSION = '1.5.17';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -324,13 +321,8 @@ function compareVersions(a, b) {
 function forceUpdateApp() {
     if (sessionStorage.getItem(FORCE_UPDATE_GUARD_KEY)) return;
     sessionStorage.setItem(FORCE_UPDATE_GUARD_KEY, '1');
-    const unregister = 'serviceWorker' in navigator
-        ? navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(reg => reg.unregister())))
-        : Promise.resolve();
-    const clearCaches = 'caches' in window
-        ? caches.keys().then(names => Promise.all(names.map(name => caches.delete(name))))
-        : Promise.resolve();
-    Promise.all([unregister, clearCaches]).finally(() => window.location.reload());
+    const update = _swReg ? _swReg.update() : Promise.resolve();
+    update.finally(() => window.location.reload());
 }
 database.ref('appConfig/requiredVersion').once('value').then(snap => {
     const required = snap.val();
@@ -1192,6 +1184,29 @@ let _missionSubmittedPrayerText = '';
 watchFinishedEventNames();
 
 function getMissionAlias() { return localStorage.getItem(MISSION_ALIAS_STORAGE_KEY) || ''; }
+function getMissionParticipantKey() {
+    let key = localStorage.getItem(MISSION_PARTICIPANT_KEY_STORAGE_KEY);
+    if (!key) {
+        key = `participant_${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`}`;
+        localStorage.setItem(MISSION_PARTICIPANT_KEY_STORAGE_KEY, key);
+    }
+    return key;
+}
+function ensureMissionParticipantKey() {
+    const key = getMissionParticipantKey();
+    return guessWhoParticipantsRef.child(mySessionId).once('value').then(snap => {
+        const participant = snap.val();
+        if (!participant || participant.participantKey) return;
+        return snap.ref.update({ participantKey: key });
+    }).catch(() => {});
+}
+function reclaimMissionIdentity() {
+    const key = localStorage.getItem(MISSION_PARTICIPANT_KEY_STORAGE_KEY);
+    if (!key) return Promise.resolve('');
+    return firebase.app().functions('asia-northeast3').httpsCallable('reclaimMissionIdentity')({ participantKey: key })
+        .then(result => result.data?.aliasName || '')
+        .catch(() => '');
+}
 function restoreMissionAliasFromParticipant() {
     return guessWhoParticipantsRef.child(mySessionId).once('value').then(snap => {
         const participant = snap.val();
@@ -1263,6 +1278,7 @@ function assignMissionAlias(skipRestore = false) {
                         realName,
                         aliasName: alias,
                         candidateId,
+                        participantKey: getMissionParticipantKey(),
                         createdAt: firebase.database.ServerValue.TIMESTAMP
                     })
                 ]).then(() => {

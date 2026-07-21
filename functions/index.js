@@ -250,6 +250,42 @@ exports.announceGuessWhoOpening = functions
         return null;
     });
 
+/* ── 익명 Firebase ID 변경 시, 기기 참가자 키로 닉네임 복구 ── */
+exports.reclaimMissionIdentity = functions
+    .region('asia-northeast3')
+    .https.onCall(async (data, context) => {
+        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        const participantKey = typeof data?.participantKey === 'string' ? data.participantKey : '';
+        if (!participantKey.startsWith('participant_') || participantKey.length < 20) {
+            throw new functions.https.HttpsError('invalid-argument', '유효하지 않은 참가자 키입니다.');
+        }
+        const db = admin.database();
+        const participantsSnap = await db.ref('guessWhoParticipants').once('value');
+        let previousSessionId = '';
+        let participant = null;
+        participantsSnap.forEach(child => {
+            const value = child.val();
+            if (!participant && value?.participantKey === participantKey) {
+                previousSessionId = child.key;
+                participant = value;
+            }
+        });
+        if (!participant || !participant.aliasName) return { aliasName: '' };
+        const currentSessionId = context.auth.uid;
+        if (previousSessionId !== currentSessionId) {
+            const aliasRef = db.ref(`missionAliases/${participant.aliasName}`);
+            const claim = await aliasRef.transaction(current =>
+                current === null || current === previousSessionId ? currentSessionId : undefined
+            );
+            if (!claim.committed || claim.snapshot.val() !== currentSessionId) {
+                throw new functions.https.HttpsError('failed-precondition', '닉네임을 복구할 수 없습니다.');
+            }
+            await db.ref(`guessWhoParticipants/${currentSessionId}`).set({ ...participant, migratedAt: admin.database.ServerValue.TIMESTAMP });
+            await db.ref(`guessWhoParticipants/${previousSessionId}`).remove();
+        }
+        return { aliasName: participant.aliasName };
+    });
+
 /* ── Guess Who? 정답 공개 및 서버 채점 ── */
 exports.revealGuessWhoResults = functions
     .region('asia-northeast3')
