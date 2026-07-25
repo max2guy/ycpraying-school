@@ -69,3 +69,11 @@ test('mission submission uses the server date and keeps node sync status separat
     assert.match(script, /httpsCallable\('submitMission'\)/);
     assert.match(script, /인증 저장 완료/);
 });
+
+test('Guess Who uses only mission participants and accepts duplicate real-name candidates', () => {
+    assert.match(functionsIndex, /function getActiveGuessWhoAliases\(missions\)/);
+    assert.match(functionsIndex, /exports\.getGuessWhoRoster/);
+    assert.match(functionsIndex, /activeAliases\.has\(participant\.aliasName\)/);
+    assert.match(functionsIndex, /selectedId === correctId \|\| \(!!selectedName && selectedName === correctName\)/);
+    assert.match(script, /httpsCallable\('getGuessWhoRoster'\)/);
+});

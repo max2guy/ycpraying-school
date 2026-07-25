@@ -11,6 +11,27 @@ const MISSION_DAYS = {
     '2026-07-23': 4, '2026-07-24': 5, '2026-07-25': 6
 };
 
+function getActiveGuessWhoAliases(missions) {
+    const aliases = new Set();
+    Object.keys(MISSION_DAYS).forEach(date => {
+        Object.entries((missions || {})[date] || {}).forEach(([sessionId, mission]) => {
+            if (sessionId.startsWith('_') || !mission) return;
+            const alias = mission.aliasName || mission.memberName;
+            if (alias) aliases.add(alias);
+        });
+    });
+    return aliases;
+}
+
+function getActiveAliasOwners(participants, activeAliases) {
+    return Object.entries(participants || {}).reduce((owners, [sessionId, participant]) => {
+        if (participant?.aliasName && participant?.candidateId && activeAliases.has(participant.aliasName)) {
+            owners[participant.aliasName] = { sessionId, ...participant };
+        }
+        return owners;
+    }, {});
+}
+
 /* ── 전체 FCM 토큰 수집 (특정 senderId 제외 가능) ── */
 async function getAllTokens(excludeSessionId) {
     const snap = await admin.database().ref('fcmTokens').once('value');
@@ -402,6 +423,27 @@ exports.submitMission = functions
         return { mission, isFirstPlace, nodeSynced };
     });
 
+/* ── Guess Who? 실제 미션 참가자 후보 목록 ── */
+exports.getGuessWhoRoster = functions
+    .region('asia-northeast3')
+    .https.onCall(async (_data, context) => {
+        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        const db = admin.database();
+        const [participantsSnap, candidatesSnap, missionsSnap] = await Promise.all([
+            db.ref('guessWhoParticipants').once('value'),
+            db.ref('guessWhoCandidates').once('value'),
+            db.ref('missions').once('value')
+        ]);
+        const participants = participantsSnap.val() || {};
+        const candidates = candidatesSnap.val() || {};
+        const activeAliases = getActiveGuessWhoAliases(missionsSnap.val() || {});
+        const aliasOwners = getActiveAliasOwners(participants, activeAliases);
+        const activeCandidates = Object.values(aliasOwners)
+            .map(owner => ({ id: owner.candidateId, name: candidates[owner.candidateId]?.name || owner.realName || '' }))
+            .filter(candidate => candidate.name);
+        return { candidates: activeCandidates };
+    });
+
 /* ── Guess Who? 정답 공개 및 서버 채점 ── */
 exports.revealGuessWhoResults = functions
     .region('asia-northeast3')
@@ -411,11 +453,12 @@ exports.revealGuessWhoResults = functions
         }
 
         const db = admin.database();
-        const [participantsSnap, answersSnap, candidatesSnap, gameSnap] = await Promise.all([
+        const [participantsSnap, answersSnap, candidatesSnap, gameSnap, missionsSnap] = await Promise.all([
             db.ref('guessWhoParticipants').once('value'),
             db.ref('guessWhoAnswers').once('value'),
             db.ref('guessWhoCandidates').once('value'),
-            db.ref('guessWhoGame').once('value')
+            db.ref('guessWhoGame').once('value'),
+            db.ref('missions').once('value')
         ]);
         if ((gameSnap.val() || {}).status === 'RESULT_REVEALED') {
             throw new functions.https.HttpsError('failed-precondition', '이미 정답이 공개되었습니다.');
@@ -424,25 +467,25 @@ exports.revealGuessWhoResults = functions
         const participants = participantsSnap.val() || {};
         const answers = answersSnap.val() || {};
         const candidates = candidatesSnap.val() || {};
-        const aliasOwners = Object.entries(participants).reduce((acc, [sessionId, participant]) => {
-            if (participant && participant.aliasName && participant.candidateId) acc[participant.aliasName] = { sessionId, ...participant };
-            return acc;
-        }, {});
+        const activeAliases = getActiveGuessWhoAliases(missionsSnap.val() || {});
+        const aliasOwners = getActiveAliasOwners(participants, activeAliases);
         const allAliases = Object.keys(aliasOwners);
         const results = {};
 
         Object.entries(answers).forEach(([playerId, answerData]) => {
             const player = participants[playerId];
-            if (!player || !answerData || !answerData.submitted) return;
+            if (!player || !activeAliases.has(player.aliasName) || !answerData || !answerData.submitted) return;
             const questionAliases = allAliases.filter(alias => alias !== player.aliasName);
             const items = questionAliases.map(alias => {
                 const selectedId = (answerData.answers || {})[alias] || '';
                 const correctId = aliasOwners[alias].candidateId;
+                const selectedName = selectedId === 'unknown' || !selectedId ? '' : ((candidates[selectedId] || {}).name || '');
+                const correctName = (candidates[correctId] || {}).name || '알 수 없음';
                 return {
                     aliasName: alias,
-                    selectedName: selectedId === 'unknown' || !selectedId ? '모르겠어요' : ((candidates[selectedId] || {}).name || '미선택'),
-                    correctName: (candidates[correctId] || {}).name || '알 수 없음',
-                    correct: selectedId === correctId
+                    selectedName: selectedName || (selectedId === 'unknown' || !selectedId ? '모르겠어요' : '미선택'),
+                    correctName,
+                    correct: selectedId === correctId || (!!selectedName && selectedName === correctName)
                 };
             });
             results[playerId] = { score: items.filter(item => item.correct).length, total: questionAliases.length, items };
