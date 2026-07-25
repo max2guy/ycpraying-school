@@ -77,3 +77,10 @@ test('Guess Who uses only mission participants and accepts duplicate real-name c
     assert.match(functionsIndex, /selectedId === correctId \|\| \(!!selectedName && selectedName === correctName\)/);
     assert.match(script, /httpsCallable\('getGuessWhoRoster'\)/);
 });
+
+test('Guess Who starts on the first click after auth is ready and shows loading feedback', () => {
+    assert.match(script, /let _guessWhoStarting = false/);
+    assert.match(script, /await participantAuthReady/);
+    assert.match(script, /게임 불러오는 중…/);
+    assert.match(html, /onclick="startGuessWhoGame\(this\)"/);
+});

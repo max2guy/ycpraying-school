@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.20 — 중고등부 전용 (S1 기반)
+// v1.5.21 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.20';
+const CURRENT_VERSION = '1.5.21';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1374,7 +1374,9 @@ function buildGuessWhoAliases(missions) {
         averageTime: item.records.length ? Math.round(item.records.reduce((sum, r) => sum + new Date(r.timestamp).getHours() * 60 + new Date(r.timestamp).getMinutes(), 0) / item.records.length) : 0
     }));
 }
-async function startGuessWhoGame() {
+let _guessWhoStarting = false;
+async function startGuessWhoGame(button) {
+    if (_guessWhoStarting) return;
     if (isGuessWhoTestMode()) {
         _guessWhoState = { aliases: [], candidates: [], answers: {} };
         showGuessWhoBoard();
@@ -1383,15 +1385,25 @@ async function startGuessWhoGame() {
     const myAlias = getMissionAlias();
     const myCandidateId = localStorage.getItem(GUESS_WHO_CANDIDATE_STORAGE_KEY);
     if (!myAlias || !myCandidateId) { alert('미션 인증에 참여한 뒤 게임을 시작할 수 있어요.'); return; }
-    const [missionsSnap, rosterResult] = await Promise.all([
-        missionsRef.once('value'),
-        firebase.app().functions('asia-northeast3').httpsCallable('getGuessWhoRoster')({})
-    ]);
-    const aliases = buildGuessWhoAliases(missionsSnap.val() || {}).filter(item => item.alias !== myAlias);
-    const candidates = (rosterResult.data.candidates || []).filter(candidate => candidate.id !== myCandidateId);
-    if (!aliases.length || !candidates.length) { alert('게임에 필요한 참가자 정보가 아직 충분하지 않아요.'); return; }
-    _guessWhoState = { aliases, candidates, answers: getGuessWhoDraft() };
-    showGuessWhoBoard();
+    _guessWhoStarting = true;
+    if (button) { button.disabled = true; button.textContent = '게임 불러오는 중…'; }
+    try {
+        await participantAuthReady;
+        const [missionsSnap, rosterResult] = await Promise.all([
+            missionsRef.once('value'),
+            firebase.app().functions('asia-northeast3').httpsCallable('getGuessWhoRoster')({})
+        ]);
+        const aliases = buildGuessWhoAliases(missionsSnap.val() || {}).filter(item => item.alias !== myAlias);
+        const candidates = (rosterResult.data.candidates || []).filter(candidate => candidate.id !== myCandidateId);
+        if (!aliases.length || !candidates.length) throw new Error('게임에 필요한 참가자 정보가 아직 충분하지 않아요.');
+        _guessWhoState = { aliases, candidates, answers: getGuessWhoDraft() };
+        showGuessWhoBoard();
+    } catch (error) {
+        alert(error.message || '게임 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+        _guessWhoStarting = false;
+        if (button) { button.disabled = false; button.textContent = '게임 시작하기'; }
+    }
 }
 function formatGuessWhoTime(minutes) {
     const hour = Math.floor(minutes / 60), minute = minutes % 60;
