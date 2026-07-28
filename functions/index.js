@@ -479,7 +479,8 @@ exports.getGuessWhoAnswerStats = functions
                     totalCount: totalParticipantCount,
                     correctRate: totalParticipantCount ? Math.round(correctCount * 100 / totalParticipantCount) : 0
                 };
-            });
+            })
+            .sort((a, b) => b.correctRate - a.correctRate || b.correctCount - a.correctCount || a.aliasName.localeCompare(b.aliasName, 'ko'));
         return { answerStats };
     });
 
@@ -549,7 +550,8 @@ exports.revealGuessWhoResults = functions
                     totalCount: totalParticipantCount,
                     correctRate: totalParticipantCount ? Math.round(correctCount * 100 / totalParticipantCount) : 0
                 };
-            });
+            })
+            .sort((a, b) => b.correctRate - a.correctRate || b.correctCount - a.correctCount || a.aliasName.localeCompare(b.aliasName, 'ko'));
 
         await Promise.all([
             db.ref('guessWhoResults').set(results),

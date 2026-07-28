@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.24 — 중고등부 전용 (S1 기반)
+// v1.5.25 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.24';
+const CURRENT_VERSION = '1.5.25';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1488,6 +1488,11 @@ async function loadGuessWhoResults(game) {
             console.warn('[GUESS WHO] answer stats load failed', error);
         }
     }
+    answerStats = [...answerStats].sort((a, b) =>
+        b.correctRate - a.correctRate ||
+        b.correctCount - a.correctCount ||
+        a.aliasName.localeCompare(b.aliasName, 'ko')
+    );
     const panel = document.getElementById('guess-who-results');
     panel.style.display = '';
     const revealHeroHtml = answerStats.length

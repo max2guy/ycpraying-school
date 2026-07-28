@@ -91,7 +91,9 @@ test('Guess Who revealed results show every identity and its correct-answer rate
   assert.match(functionsIndex, /const totalParticipantCount = Object\.keys\(aliasOwners\)\.length/);
   assert.match(functionsIndex, /totalCount: totalParticipantCount/);
   assert.match(functionsIndex, /correctRate: totalParticipantCount \? Math\.round/);
+  assert.match(functionsIndex, /b\.correctRate - a\.correctRate \|\| b\.correctCount - a\.correctCount/);
   assert.match(script, /httpsCallable\('getGuessWhoAnswerStats'\)/);
+  assert.match(script, /answerStats = \[\.\.\.answerStats\]\.sort/);
   assert.match(script, /누가 누구였을까요\?/);
   assert.match(script, /\$\{rate\}%/);
   assert.match(script, /전체 \$\{item\.totalCount\}명 중 \$\{item\.correctCount\}명을 맞혔어요/);
