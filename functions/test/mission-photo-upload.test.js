@@ -84,3 +84,12 @@ test('Guess Who starts on the first click after auth is ready and shows loading 
     assert.match(script, /게임 불러오는 중…/);
     assert.match(html, /onclick="startGuessWhoGame\(this\)"/);
 });
+
+test('Guess Who revealed results show every identity and its correct-answer rate', () => {
+  assert.match(functionsIndex, /exports\.getGuessWhoAnswerStats/);
+  assert.match(functionsIndex, /status !== 'RESULT_REVEALED'/);
+  assert.match(functionsIndex, /correctRate: items\.length \? Math\.round/);
+  assert.match(script, /httpsCallable\('getGuessWhoAnswerStats'\)/);
+  assert.match(script, /누가 누구였을까요\?/);
+  assert.match(script, /정답률 \$\{item\.correctRate\}%/);
+});

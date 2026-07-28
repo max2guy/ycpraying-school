@@ -444,6 +444,44 @@ exports.getGuessWhoRoster = functions
         return { candidates: activeCandidates };
     });
 
+/* ── Guess Who? 공개된 전체 정답과 항목별 정답률 ── */
+exports.getGuessWhoAnswerStats = functions
+    .region('asia-northeast3')
+    .https.onCall(async (_data, context) => {
+        if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        const db = admin.database();
+        const [participantsSnap, candidatesSnap, gameSnap, missionsSnap, resultsSnap] = await Promise.all([
+            db.ref('guessWhoParticipants').once('value'),
+            db.ref('guessWhoCandidates').once('value'),
+            db.ref('guessWhoGame').once('value'),
+            db.ref('missions').once('value'),
+            db.ref('guessWhoResults').once('value')
+        ]);
+        if ((gameSnap.val() || {}).status !== 'RESULT_REVEALED') {
+            throw new functions.https.HttpsError('failed-precondition', '아직 정답이 공개되지 않았습니다.');
+        }
+        const participants = participantsSnap.val() || {};
+        const candidates = candidatesSnap.val() || {};
+        const results = resultsSnap.val() || {};
+        const activeAliases = getActiveGuessWhoAliases(missionsSnap.val() || {});
+        const aliasOwners = getActiveAliasOwners(participants, activeAliases);
+        const judgedItems = Object.values(results).flatMap(result => result.items || []);
+        const answerStats = Object.keys(aliasOwners)
+            .sort((a, b) => a.localeCompare(b, 'ko'))
+            .map(aliasName => {
+                const items = judgedItems.filter(item => item.aliasName === aliasName);
+                const correctCount = items.filter(item => item.correct).length;
+                return {
+                    aliasName,
+                    correctName: candidates[aliasOwners[aliasName].candidateId]?.name || aliasOwners[aliasName].realName || '알 수 없음',
+                    correctCount,
+                    totalCount: items.length,
+                    correctRate: items.length ? Math.round(correctCount * 100 / items.length) : 0
+                };
+            });
+        return { answerStats };
+    });
+
 /* ── Guess Who? 정답 공개 및 서버 채점 ── */
 exports.revealGuessWhoResults = functions
     .region('asia-northeast3')
@@ -496,6 +534,20 @@ exports.revealGuessWhoResults = functions
             .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
         const topScore = leaderboard.length ? leaderboard[0].score : 0;
         const winners = leaderboard.filter(item => item.score === topScore);
+        const judgedItems = Object.values(results).flatMap(result => result.items || []);
+        const answerStats = allAliases
+            .sort((a, b) => a.localeCompare(b, 'ko'))
+            .map(aliasName => {
+                const items = judgedItems.filter(item => item.aliasName === aliasName);
+                const correctCount = items.filter(item => item.correct).length;
+                return {
+                    aliasName,
+                    correctName: candidates[aliasOwners[aliasName].candidateId]?.name || aliasOwners[aliasName].realName || '알 수 없음',
+                    correctCount,
+                    totalCount: items.length,
+                    correctRate: items.length ? Math.round(correctCount * 100 / items.length) : 0
+                };
+            });
 
         await Promise.all([
             db.ref('guessWhoResults').set(results),
@@ -503,7 +555,8 @@ exports.revealGuessWhoResults = functions
                 status: 'RESULT_REVEALED',
                 resultRevealedAt: admin.database.ServerValue.TIMESTAMP,
                 leaderboard,
-                winners
+                winners,
+                answerStats
             })
         ]);
         return { winnerCount: winners.length, topScore };

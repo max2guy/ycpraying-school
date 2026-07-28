@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.21 — 중고등부 전용 (S1 기반)
+// v1.5.22 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.21';
+const CURRENT_VERSION = '1.5.22';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1479,11 +1479,27 @@ function showGuessWhoWaiting() {
 async function loadGuessWhoResults(game) {
     hideGuessWhoSections();
     const result = (await guessWhoResultsRef.child(mySessionId).once('value')).val();
+    let answerStats = game.answerStats || [];
+    if (!answerStats.length) {
+        try {
+            const response = await firebase.app().functions('asia-northeast3').httpsCallable('getGuessWhoAnswerStats')({});
+            answerStats = response.data.answerStats || [];
+        } catch (error) {
+            console.warn('[GUESS WHO] answer stats load failed', error);
+        }
+    }
     const panel = document.getElementById('guess-who-results');
     panel.style.display = '';
-    if (!result) panel.innerHTML = '<div class="guess-who-empty">제출한 답안이 없어요.</div>';
-    else panel.innerHTML = `<div class="guess-result-score">나의 최종 점수<b>${result.score}점</b>${result.total}명 중 ${result.score}명 정답</div>${result.items.map(item => `<div class="guess-result-item${item.correct ? ' correct' : ''}"><b>${escHtml(item.aliasName)}</b><br>내 선택: ${escHtml(item.selectedName)} · 정답: ${escHtml(item.correctName)}<br>${item.correct ? '정답 ✓' : '오답'}</div>`).join('')}`;
-    if (game.winners && game.winners.length) panel.innerHTML += `<div class="guess-history"><strong>공동 우승자</strong><br>${game.winners.map(winner => `${escHtml(winner.name)} · ${winner.score}점`).join('<br>')}</div>`;
+    const answerStatsHtml = answerStats.length
+        ? `<section class="guess-answer-key"><h3>🎭 누가 누구였을까요?</h3><div class="guess-answer-key-grid">${answerStats.map(item => `<div class="guess-answer-key-item"><div><b>${escHtml(item.aliasName)}</b><span>→ ${escHtml(item.correctName)}</span></div><small>정답률 ${item.correctRate}% (${item.correctCount}/${item.totalCount}명)</small></div>`).join('')}</div></section>`
+        : '<div class="guess-who-empty">전체 정답표를 불러오지 못했어요.</div>';
+    const winnersHtml = game.winners && game.winners.length
+        ? `<div class="guess-history"><strong>최고 득점자</strong><br>${game.winners.map(winner => `${escHtml(winner.name)} · ${winner.score}점`).join('<br>')}</div>`
+        : '';
+    const resultHtml = result
+        ? `<div class="guess-result-score">나의 최종 점수<b>${result.score}점</b>${result.total}명 중 ${result.score}명 정답</div>${result.items.map(item => `<div class="guess-result-item${item.correct ? ' correct' : ''}"><b>${escHtml(item.aliasName)}</b><br>내 선택: ${escHtml(item.selectedName)} · 정답: ${escHtml(item.correctName)}<br>${item.correct ? '정답 ✓' : '오답'}</div>`).join('')}`
+        : '<div class="guess-who-empty">제출한 답안이 없어요.</div>';
+    panel.innerHTML = answerStatsHtml + winnersHtml + resultHtml;
     renderGuessWhoAdmin();
 }
 function renderGuessWhoAdmin() {

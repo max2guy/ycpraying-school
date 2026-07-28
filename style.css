@@ -745,6 +745,14 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .guess-who-empty { padding:34px 18px; text-align:center; border:1px solid rgba(255,255,255,0.25); border-radius:var(--r-md); background:rgba(255,255,255,0.16); color:#fff; font-size:0.88rem; line-height:1.8; }
 .guess-result-score { text-align:center; margin:8px 0 16px; padding:18px; border:1px solid rgba(255,229,126,0.56); border-radius:var(--r-md); background:linear-gradient(135deg,#FFF4B6,#FFBB76 52%,#E978C1); color:#5B286E; font-size:1rem; font-weight:800; box-shadow:0 10px 22px rgba(20,6,52,0.28); }
 .guess-result-score b { display:block; font-size:2.2rem; line-height:1.15; }
+.guess-answer-key { margin:8px 0 14px; padding:14px; border:1px solid rgba(255,229,126,0.52); border-radius:var(--r-md); background:rgba(255,255,255,0.94); color:#5B286E; }
+.guess-answer-key h3 { margin:0 0 12px; text-align:center; font-size:1rem; }
+.guess-answer-key-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.guess-answer-key-item { min-width:0; padding:9px 8px; border-radius:var(--r-sm); background:#F8EFFC; font-size:0.76rem; }
+.guess-answer-key-item div { display:flex; align-items:center; gap:5px; min-width:0; }
+.guess-answer-key-item b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#8057B2; }
+.guess-answer-key-item span { color:#5B286E; }
+.guess-answer-key-item small { display:block; margin-top:4px; color:#9A64AA; font-size:0.66rem; }
 .guess-result-item { padding:11px 12px; margin-bottom:7px; border:1px solid rgba(255,255,255,0.32); border-radius:var(--r-sm); font-size:0.8rem; line-height:1.55; background:rgba(255,255,255,0.92); color:var(--text-muted); }
 .guess-result-item.correct { background:#EAF8F1; color:#2A8A62; }
 .guess-admin-box { margin-top:16px; padding:12px; border:1.5px dashed rgba(255,234,140,0.7); border-radius:var(--r-md); background:rgba(37,16,75,0.46); color:#fff; }
