@@ -465,6 +465,7 @@ exports.getGuessWhoAnswerStats = functions
         const results = resultsSnap.val() || {};
         const activeAliases = getActiveGuessWhoAliases(missionsSnap.val() || {});
         const aliasOwners = getActiveAliasOwners(participants, activeAliases);
+        const totalParticipantCount = Object.keys(aliasOwners).length;
         const judgedItems = Object.values(results).flatMap(result => result.items || []);
         const answerStats = Object.keys(aliasOwners)
             .sort((a, b) => a.localeCompare(b, 'ko'))
@@ -475,8 +476,8 @@ exports.getGuessWhoAnswerStats = functions
                     aliasName,
                     correctName: candidates[aliasOwners[aliasName].candidateId]?.name || aliasOwners[aliasName].realName || '알 수 없음',
                     correctCount,
-                    totalCount: items.length,
-                    correctRate: items.length ? Math.round(correctCount * 100 / items.length) : 0
+                    totalCount: totalParticipantCount,
+                    correctRate: totalParticipantCount ? Math.round(correctCount * 100 / totalParticipantCount) : 0
                 };
             });
         return { answerStats };
@@ -534,6 +535,7 @@ exports.revealGuessWhoResults = functions
             .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
         const topScore = leaderboard.length ? leaderboard[0].score : 0;
         const winners = leaderboard.filter(item => item.score === topScore);
+        const totalParticipantCount = allAliases.length;
         const judgedItems = Object.values(results).flatMap(result => result.items || []);
         const answerStats = allAliases
             .sort((a, b) => a.localeCompare(b, 'ko'))
@@ -544,8 +546,8 @@ exports.revealGuessWhoResults = functions
                     aliasName,
                     correctName: candidates[aliasOwners[aliasName].candidateId]?.name || aliasOwners[aliasName].realName || '알 수 없음',
                     correctCount,
-                    totalCount: items.length,
-                    correctRate: items.length ? Math.round(correctCount * 100 / items.length) : 0
+                    totalCount: totalParticipantCount,
+                    correctRate: totalParticipantCount ? Math.round(correctCount * 100 / totalParticipantCount) : 0
                 };
             });
 

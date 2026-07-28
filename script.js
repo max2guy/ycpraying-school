@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.23 — 중고등부 전용 (S1 기반)
+// v1.5.24 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.23';
+const CURRENT_VERSION = '1.5.24';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1494,19 +1494,26 @@ async function loadGuessWhoResults(game) {
         ? `<section class="guess-reveal-hero"><div class="guess-reveal-icon">🎭</div><div><span>MYSTERY REVEALED</span><h3>모든 이름이 공개됐어요!</h3><p>7일 동안 함께한 말씀 친구들을 만나보세요.</p></div></section>`
         : '';
     const winnersHtml = game.winners && game.winners.length
-        ? `<section class="guess-winner-stage"><div class="guess-winner-crown">🏆</div><div class="guess-winner-copy"><span>GUESS WHO CHAMPION</span><strong>${game.winners.map(winner => escHtml(winner.name)).join(' · ')}</strong><small>최고 점수 ${game.winners[0].score}점</small></div><i>✦</i><i>✦</i></section>`
+        ? `<section class="guess-winner-stage"><div class="guess-winner-crown">🏆</div><div class="guess-winner-copy"><span>GUESS WHO CHAMPION</span><strong>${game.winners.map(winner => {
+            const identity = answerStats.find(item => item.correctName === winner.name);
+            return identity ? `${escHtml(identity.aliasName)} (${escHtml(winner.name)})` : escHtml(winner.name);
+        }).join(' · ')}</strong><small>최고 점수 ${game.winners[0].score}점</small></div><i>✦</i><i>✦</i></section>`
         : '';
     const answerStatsHtml = answerStats.length
         ? `<section class="guess-answer-key"><div class="guess-answer-key-heading"><div><span>IDENTITY CARD</span><h3>누가 누구였을까요?</h3></div><b>${answerStats.length}명 공개</b></div><div class="guess-answer-key-grid">${answerStats.map((item, index) => {
             const rate = Math.max(0, Math.min(100, Number(item.correctRate) || 0));
             const tone = rate >= 70 ? ' high' : (rate >= 40 ? ' medium' : '');
-            return `<article class="guess-answer-key-item${tone}" style="--reveal-order:${index}"><div class="guess-answer-card-top"><span>#${String(index + 1).padStart(2, '0')}</span><b>${rate}%</b></div><div class="guess-answer-names"><span>${escHtml(item.aliasName)}</span><i>→</i><strong>${escHtml(item.correctName)}</strong></div><div class="guess-rate-track"><i style="width:${rate}%"></i></div><small>${item.totalCount}명 중 ${item.correctCount}명이 맞혔어요</small></article>`;
+            return `<article class="guess-answer-key-item${tone}" style="--reveal-order:${index}"><div class="guess-answer-card-top"><span>#${String(index + 1).padStart(2, '0')}</span><b>${rate}%</b></div><div class="guess-answer-names"><span>${escHtml(item.aliasName)}</span><i>→</i><strong>${escHtml(item.correctName)}</strong></div><div class="guess-rate-track"><i style="width:${rate}%"></i></div><small>전체 ${item.totalCount}명 중 ${item.correctCount}명을 맞혔어요</small></article>`;
         }).join('')}</div></section>`
         : '<div class="guess-who-empty">전체 정답표를 불러오지 못했어요.</div>';
-    const resultHtml = result
-        ? `<section class="guess-personal-results"><div class="guess-personal-heading"><span>MY RESULT</span><h3>나의 답안 돌아보기</h3></div><div class="guess-result-score"><span>최종 점수</span><b>${result.score}점</b><small>${result.total}명 중 ${result.score}명 정답</small></div><div class="guess-result-list">${result.items.map(item => `<div class="guess-result-item${item.correct ? ' correct' : ''}"><span class="guess-result-state">${item.correct ? '✓' : '×'}</span><div><b>${escHtml(item.aliasName)}</b><small>내 선택 · ${escHtml(item.selectedName)}</small></div><p><small>정답</small>${escHtml(item.correctName)}</p></div>`).join('')}</div></section>`
+    const correctItems = result ? result.items.filter(item => item.correct) : [];
+    const personalSummaryHtml = result
+        ? `<section class="guess-personal-summary"><div class="guess-personal-heading"><span>MY RESULT</span><h3>내가 맞힌 친구</h3></div><div class="guess-result-score"><span>최종 점수</span><b>${result.score}점</b><small>${result.total}명 중 ${result.score}명 정답</small></div><div class="guess-correct-summary">${correctItems.length ? correctItems.map(item => `<div><span>${escHtml(item.aliasName)}</span><i>→</i><b>${escHtml(item.correctName)}</b></div>`).join('') : '<p>맞힌 친구가 없어요.</p>'}</div></section>`
         : '<div class="guess-no-submission">게임에는 참여하지 않았지만<br>모든 친구의 정답은 확인할 수 있어요.</div>';
-    panel.innerHTML = revealHeroHtml + winnersHtml + answerStatsHtml + resultHtml;
+    const resultDetailsHtml = result
+        ? `<section class="guess-personal-results"><div class="guess-personal-heading"><span>ANSWER REVIEW</span><h3>내 답안 전체 확인</h3></div><div class="guess-result-list">${result.items.map(item => `<div class="guess-result-item${item.correct ? ' correct' : ''}"><span class="guess-result-state">${item.correct ? '✓' : '×'}</span><div><b>${escHtml(item.aliasName)}</b><small>내 선택 · ${escHtml(item.selectedName)}</small></div><p><small>정답</small>${escHtml(item.correctName)}</p></div>`).join('')}</div></section>`
+        : '';
+    panel.innerHTML = revealHeroHtml + winnersHtml + personalSummaryHtml + answerStatsHtml + resultDetailsHtml;
     document.querySelector('#guess-who-popup .guess-who-scroll').scrollTop = 0;
     renderGuessWhoAdmin();
 }

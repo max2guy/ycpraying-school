@@ -779,11 +779,16 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .guess-answer-key-item.medium .guess-rate-track i { background:linear-gradient(90deg,#F1AE62,#ED817E); }
 .guess-answer-key-item.high .guess-rate-track i { background:linear-gradient(90deg,#57C9A2,#8DDC91); }
 .guess-answer-key-item > small { display:block; margin-top:6px; color:#A28BAF; font-size:.6rem; }
+.guess-personal-summary { margin-bottom:14px; }
 .guess-personal-results { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); }
 .guess-personal-heading { margin-bottom:10px; color:#fff; }
 .guess-personal-heading h3 { margin:2px 0 0; color:#fff; font-size:1rem; }
 .guess-result-score { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 12px; padding:14px 16px; border:1px solid rgba(255,229,126,.56); border-radius:18px; background:linear-gradient(135deg,#FFF4B6,#FFBB76 52%,#E978C1); color:#5B286E; font-weight:800; box-shadow:0 10px 22px rgba(20,6,52,.28); }
 .guess-result-score > span { font-size:.76rem; }.guess-result-score b { font-size:1.8rem; line-height:1; }.guess-result-score small { color:#71426E; font-size:.64rem; }
+.guess-correct-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:7px; padding:12px; border:1px solid rgba(255,255,255,.38); border-radius:16px; background:rgba(255,255,255,.94); box-shadow:0 8px 20px rgba(24,7,55,.18); }
+.guess-correct-summary > div { display:flex; align-items:center; min-width:0; padding:8px 9px; border-radius:11px; background:#EAF8F1; color:#287F60; font-size:.68rem; }
+.guess-correct-summary span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:800; }.guess-correct-summary i { margin:0 5px; color:#83C5AB; font-style:normal; }.guess-correct-summary b { flex:none; }
+.guess-correct-summary p { grid-column:1/-1; margin:0; color:#987DA5; text-align:center; font-size:.7rem; }
 .guess-result-list { display:flex; flex-direction:column; gap:7px; }
 .guess-result-item { display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:9px; padding:10px 12px; border:1px solid rgba(255,255,255,.32); border-radius:13px; background:rgba(255,255,255,.94); color:#8B668F; }
 .guess-result-state { width:28px; height:28px; display:grid; place-items:center; border-radius:10px; background:#F5E6ED; color:#CB6681; font-weight:900; }

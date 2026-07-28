@@ -88,13 +88,17 @@ test('Guess Who starts on the first click after auth is ready and shows loading 
 test('Guess Who revealed results show every identity and its correct-answer rate', () => {
   assert.match(functionsIndex, /exports\.getGuessWhoAnswerStats/);
   assert.match(functionsIndex, /status !== 'RESULT_REVEALED'/);
-  assert.match(functionsIndex, /correctRate: items\.length \? Math\.round/);
+  assert.match(functionsIndex, /const totalParticipantCount = Object\.keys\(aliasOwners\)\.length/);
+  assert.match(functionsIndex, /totalCount: totalParticipantCount/);
+  assert.match(functionsIndex, /correctRate: totalParticipantCount \? Math\.round/);
   assert.match(script, /httpsCallable\('getGuessWhoAnswerStats'\)/);
   assert.match(script, /누가 누구였을까요\?/);
   assert.match(script, /\$\{rate\}%/);
-  assert.match(script, /명이 맞혔어요/);
+  assert.match(script, /전체 \$\{item\.totalCount\}명 중 \$\{item\.correctCount\}명을 맞혔어요/);
   assert.match(script, /guess-winner-stage/);
   assert.match(script, /guess-rate-track/);
+  assert.match(script, /내가 맞힌 친구/);
+  assert.match(script, /const correctItems = result \? result\.items\.filter\(item => item\.correct\)/);
   assert.match(script, /guess-personal-results/);
   assert.match(script, /guess-who-popup \.guess-who-scroll'\)\.scrollTop = 0/);
 });
