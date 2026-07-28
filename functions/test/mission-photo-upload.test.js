@@ -91,5 +91,10 @@ test('Guess Who revealed results show every identity and its correct-answer rate
   assert.match(functionsIndex, /correctRate: items\.length \? Math\.round/);
   assert.match(script, /httpsCallable\('getGuessWhoAnswerStats'\)/);
   assert.match(script, /누가 누구였을까요\?/);
-  assert.match(script, /정답률 \$\{item\.correctRate\}%/);
+  assert.match(script, /\$\{rate\}%/);
+  assert.match(script, /명이 맞혔어요/);
+  assert.match(script, /guess-winner-stage/);
+  assert.match(script, /guess-rate-track/);
+  assert.match(script, /guess-personal-results/);
+  assert.match(script, /guess-who-popup \.guess-who-scroll'\)\.scrollTop = 0/);
 });
