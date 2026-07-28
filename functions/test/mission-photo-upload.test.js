@@ -88,15 +88,16 @@ test('Guess Who starts on the first click after auth is ready and shows loading 
 test('Guess Who revealed results show every identity and its correct-answer rate', () => {
   assert.match(functionsIndex, /exports\.getGuessWhoAnswerStats/);
   assert.match(functionsIndex, /status !== 'RESULT_REVEALED'/);
-  assert.match(functionsIndex, /const totalParticipantCount = Object\.keys\(aliasOwners\)\.length/);
-  assert.match(functionsIndex, /totalCount: totalParticipantCount/);
-  assert.match(functionsIndex, /correctRate: totalParticipantCount \? Math\.round/);
-  assert.match(functionsIndex, /b\.correctRate - a\.correctRate \|\| b\.correctCount - a\.correctCount/);
+  assert.match(functionsIndex, /const result = results\[owner\.sessionId\] \|\| null/);
+  assert.match(functionsIndex, /totalCount = result\?\.total \|\| Math\.max\(totalParticipantCount - 1, 0\)/);
+  assert.match(functionsIndex, /submitted: !!result/);
+  assert.match(functionsIndex, /Number\(b\.submitted\) - Number\(a\.submitted\)/);
   assert.match(script, /httpsCallable\('getGuessWhoAnswerStats'\)/);
   assert.match(script, /answerStats = \[\.\.\.answerStats\]\.sort/);
-  assert.match(script, /누가 누구였을까요\?/);
+  assert.match(script, /참가자별 게임 결과/);
   assert.match(script, /\$\{rate\}%/);
-  assert.match(script, /전체 \$\{item\.totalCount\}명 중 \$\{item\.correctCount\}명을 맞혔어요/);
+  assert.match(script, /본인 제외 \$\{item\.totalCount\}명 중 \$\{item\.correctCount\}명을 맞혔어요/);
+  assert.match(script, /답안을 제출하지 않았어요/);
   assert.match(script, /guess-winner-stage/);
   assert.match(script, /guess-rate-track/);
   assert.match(script, /내가 맞힌 친구/);

@@ -778,6 +778,8 @@ body.admin-mode .admin-indicator { display:block; animation:popUp .3s cubic-bezi
 .guess-rate-track i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#B18BD2,#DE76B4); }
 .guess-answer-key-item.medium .guess-rate-track i { background:linear-gradient(90deg,#F1AE62,#ED817E); }
 .guess-answer-key-item.high .guess-rate-track i { background:linear-gradient(90deg,#57C9A2,#8DDC91); }
+.guess-answer-key-item.unsubmitted { opacity:.66; background:#F7F3F8; }
+.guess-answer-key-item.unsubmitted .guess-answer-card-top b { background:#ECE7EE; color:#9C909F; }
 .guess-answer-key-item > small { display:block; margin-top:6px; color:#A28BAF; font-size:.6rem; }
 .guess-personal-summary { margin-bottom:14px; }
 .guess-personal-results { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); }

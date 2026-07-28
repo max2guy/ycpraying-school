@@ -1,6 +1,6 @@
 // ==========================================
 // 연천장로교회 중고등부 수련회 기도회
-// v1.5.25 — 중고등부 전용 (S1 기반)
+// v1.5.26 — 중고등부 전용 (S1 기반)
 // ==========================================
 
 // ── 서비스 워커 (cross passport 방식: 업데이트 감지 + 자동 적용) ──
@@ -305,7 +305,7 @@ function createSafeElement(tag, className, text) {
 
 // ── FCM 초기화 (푸시 알림 토큰 등록) ──
 const FCM_VAPID_KEY = 'BPLEqfTFIUn0COicE2MpbhxRAB_ML7EzkuZEEsuOLaWzl1HszicD1n4KXmIP7a4SNOeWnHcRLtrEmuhH7m8aVpA';
-const CURRENT_VERSION = '1.5.25';
+const CURRENT_VERSION = '1.5.26';
 const FORCE_UPDATE_GUARD_KEY = 'forceUpdateAttemptedVersion';
 
 // ── 버전 강제 체크 (DB에서 requiredVersion 읽어 구버전이면 강제 갱신) ──
@@ -1489,6 +1489,7 @@ async function loadGuessWhoResults(game) {
         }
     }
     answerStats = [...answerStats].sort((a, b) =>
+        Number(b.submitted) - Number(a.submitted) ||
         b.correctRate - a.correctRate ||
         b.correctCount - a.correctCount ||
         a.aliasName.localeCompare(b.aliasName, 'ko')
@@ -1505,10 +1506,11 @@ async function loadGuessWhoResults(game) {
         }).join(' · ')}</strong><small>최고 점수 ${game.winners[0].score}점</small></div><i>✦</i><i>✦</i></section>`
         : '';
     const answerStatsHtml = answerStats.length
-        ? `<section class="guess-answer-key"><div class="guess-answer-key-heading"><div><span>IDENTITY CARD</span><h3>누가 누구였을까요?</h3></div><b>${answerStats.length}명 공개</b></div><div class="guess-answer-key-grid">${answerStats.map((item, index) => {
+        ? `<section class="guess-answer-key"><div class="guess-answer-key-heading"><div><span>FINAL RANKING</span><h3>참가자별 게임 결과</h3></div><b>${answerStats.length}명</b></div><div class="guess-answer-key-grid">${answerStats.map((item, index) => {
+            const submitted = item.submitted !== false;
             const rate = Math.max(0, Math.min(100, Number(item.correctRate) || 0));
             const tone = rate >= 70 ? ' high' : (rate >= 40 ? ' medium' : '');
-            return `<article class="guess-answer-key-item${tone}" style="--reveal-order:${index}"><div class="guess-answer-card-top"><span>#${String(index + 1).padStart(2, '0')}</span><b>${rate}%</b></div><div class="guess-answer-names"><span>${escHtml(item.aliasName)}</span><i>→</i><strong>${escHtml(item.correctName)}</strong></div><div class="guess-rate-track"><i style="width:${rate}%"></i></div><small>전체 ${item.totalCount}명 중 ${item.correctCount}명을 맞혔어요</small></article>`;
+            return `<article class="guess-answer-key-item${submitted ? tone : ' unsubmitted'}" style="--reveal-order:${index}"><div class="guess-answer-card-top"><span>${submitted ? `#${String(index + 1).padStart(2, '0')}` : '미제출'}</span><b>${submitted ? `${item.correctCount}/${item.totalCount} · ${rate}%` : '미제출'}</b></div><div class="guess-answer-names"><span>${escHtml(item.aliasName)}</span><i>→</i><strong>${escHtml(item.correctName)}</strong></div><div class="guess-rate-track"><i style="width:${submitted ? rate : 0}%"></i></div><small>${submitted ? `본인 제외 ${item.totalCount}명 중 ${item.correctCount}명을 맞혔어요` : '답안을 제출하지 않았어요'}</small></article>`;
         }).join('')}</div></section>`
         : '<div class="guess-who-empty">전체 정답표를 불러오지 못했어요.</div>';
     const correctItems = result ? result.items.filter(item => item.correct) : [];

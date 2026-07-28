@@ -466,21 +466,22 @@ exports.getGuessWhoAnswerStats = functions
         const activeAliases = getActiveGuessWhoAliases(missionsSnap.val() || {});
         const aliasOwners = getActiveAliasOwners(participants, activeAliases);
         const totalParticipantCount = Object.keys(aliasOwners).length;
-        const judgedItems = Object.values(results).flatMap(result => result.items || []);
         const answerStats = Object.keys(aliasOwners)
-            .sort((a, b) => a.localeCompare(b, 'ko'))
             .map(aliasName => {
-                const items = judgedItems.filter(item => item.aliasName === aliasName);
-                const correctCount = items.filter(item => item.correct).length;
+                const owner = aliasOwners[aliasName];
+                const result = results[owner.sessionId] || null;
+                const totalCount = result?.total || Math.max(totalParticipantCount - 1, 0);
+                const correctCount = result?.score || 0;
                 return {
                     aliasName,
-                    correctName: candidates[aliasOwners[aliasName].candidateId]?.name || aliasOwners[aliasName].realName || '알 수 없음',
+                    correctName: candidates[owner.candidateId]?.name || owner.realName || '알 수 없음',
+                    submitted: !!result,
                     correctCount,
-                    totalCount: totalParticipantCount,
-                    correctRate: totalParticipantCount ? Math.round(correctCount * 100 / totalParticipantCount) : 0
+                    totalCount,
+                    correctRate: result && totalCount ? Math.round(correctCount * 100 / totalCount) : 0
                 };
             })
-            .sort((a, b) => b.correctRate - a.correctRate || b.correctCount - a.correctCount || a.aliasName.localeCompare(b.aliasName, 'ko'));
+            .sort((a, b) => Number(b.submitted) - Number(a.submitted) || b.correctRate - a.correctRate || b.correctCount - a.correctCount || a.aliasName.localeCompare(b.aliasName, 'ko'));
         return { answerStats };
     });
 
@@ -537,21 +538,22 @@ exports.revealGuessWhoResults = functions
         const topScore = leaderboard.length ? leaderboard[0].score : 0;
         const winners = leaderboard.filter(item => item.score === topScore);
         const totalParticipantCount = allAliases.length;
-        const judgedItems = Object.values(results).flatMap(result => result.items || []);
         const answerStats = allAliases
-            .sort((a, b) => a.localeCompare(b, 'ko'))
             .map(aliasName => {
-                const items = judgedItems.filter(item => item.aliasName === aliasName);
-                const correctCount = items.filter(item => item.correct).length;
+                const owner = aliasOwners[aliasName];
+                const result = results[owner.sessionId] || null;
+                const totalCount = result?.total || Math.max(totalParticipantCount - 1, 0);
+                const correctCount = result?.score || 0;
                 return {
                     aliasName,
-                    correctName: candidates[aliasOwners[aliasName].candidateId]?.name || aliasOwners[aliasName].realName || '알 수 없음',
+                    correctName: candidates[owner.candidateId]?.name || owner.realName || '알 수 없음',
+                    submitted: !!result,
                     correctCount,
-                    totalCount: totalParticipantCount,
-                    correctRate: totalParticipantCount ? Math.round(correctCount * 100 / totalParticipantCount) : 0
+                    totalCount,
+                    correctRate: result && totalCount ? Math.round(correctCount * 100 / totalCount) : 0
                 };
             })
-            .sort((a, b) => b.correctRate - a.correctRate || b.correctCount - a.correctCount || a.aliasName.localeCompare(b.aliasName, 'ko'));
+            .sort((a, b) => Number(b.submitted) - Number(a.submitted) || b.correctRate - a.correctRate || b.correctCount - a.correctCount || a.aliasName.localeCompare(b.aliasName, 'ko'));
 
         await Promise.all([
             db.ref('guessWhoResults').set(results),
